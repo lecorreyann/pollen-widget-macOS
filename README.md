@@ -37,8 +37,8 @@ Le widget se rafraîchit automatiquement toutes les heures.
 ### 1. Cloner le dépôt
 
 ```bash
-git clone git@github.com:lecorreyann/pollen-widget-iOS.git
-cd pollen-widget-iOS
+git clone git@github.com:lecorreyann/pollen-widget-macOS.git
+cd pollen-widget-macOS
 ```
 
 ### 2. (Optionnel) Régénérer le projet Xcode
@@ -145,7 +145,7 @@ Pollen.xcodeproj                 Projet Xcode généré
 
 ## Limitations
 
-- Pas de support iOS pour l'instant — code spécifique macOS dans `PollenWidget.swift` (`Color(nsColor:)`)
+- Cible macOS uniquement — code spécifique macOS dans `PollenWidget.swift` (`Color(nsColor:)`)
 - Le hover et le clic sur une courbe ne sont pas disponibles : les widgets macOS sont des snapshots non interactifs hors `Button(intent:)`
 - Compilation locale en ad-hoc — pour distribuer, ajoutez votre Team ID dans Xcode (*Signing & Capabilities*)
 
