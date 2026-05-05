@@ -1,0 +1,504 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		08F39E349B46555EE3365C9F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 85567AB1FCAE74E6BD6FA918 /* Assets.xcassets */; };
+		0E819E449459A8F8E01F3C5A /* PollenWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FE7B6DEE3047923DA737ACF /* PollenWidgetView.swift */; };
+		1E5D3A503756C4E4E55709B9 /* PollenIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F4CE23ABD356D8E242AEF9 /* PollenIntent.swift */; };
+		225059458EA8C45AE94EC36E /* PollenChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369D98ED026A1702CF4CAADF /* PollenChart.swift */; };
+		2CC5394C9AD0E375C0C36ECB /* PollenWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2C6C089E73BFF583E7FAB1A /* PollenWidgetBundle.swift */; };
+		4372507EC84DCF76C3815662 /* PollenWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19907E626C77B353D09E1A26 /* PollenWidget.swift */; };
+		688F10BF2CECB806A0548855 /* PollenWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0FEE352F1BB595A93F7AAADA /* PollenWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		87EE0D709D848C780EF30D4E /* PollenApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37672E3466F674ABDAF835FE /* PollenApp.swift */; };
+		98416D4B37CD48F15EEE9233 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0E88B6CB1457C590B5CB0862 /* Assets.xcassets */; };
+		A9B1CA99265457B597153D1D /* PollenAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD4408D65651973E16BC0050 /* PollenAPI.swift */; };
+		ADF8BC4D9533E58AEC282963 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7EAE15C1C9F9FB92253B7A /* ContentView.swift */; };
+		AF09C7523CA0A9F2043FA485 /* PollenModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E844288C58A64177F5A4CC82 /* PollenModels.swift */; };
+		E6A007B7E613A035A27C6FD2 /* PollenRisk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48523D5528AA43CA75F31E87 /* PollenRisk.swift */; };
+		E7233CCA075D038BF7A6895B /* PollenProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 697127F9B9F73472A6361FCA /* PollenProvider.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5A14EC2221E688540E0DD903 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B4C2D564FBB6BCD8C2B04408 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0B6DEA5075774E493F9D5A15;
+			remoteInfo = PollenWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BAE786B396B0B4DD473896A3 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				688F10BF2CECB806A0548855 /* PollenWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0E88B6CB1457C590B5CB0862 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0FEE352F1BB595A93F7AAADA /* PollenWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PollenWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		125A9FFA905A70B2C683B8B3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		146D58B73E9E00DC127318DC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		19907E626C77B353D09E1A26 /* PollenWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenWidget.swift; sourceTree = "<group>"; };
+		2F7EAE15C1C9F9FB92253B7A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		369D98ED026A1702CF4CAADF /* PollenChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenChart.swift; sourceTree = "<group>"; };
+		37672E3466F674ABDAF835FE /* PollenApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenApp.swift; sourceTree = "<group>"; };
+		48523D5528AA43CA75F31E87 /* PollenRisk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenRisk.swift; sourceTree = "<group>"; };
+		697127F9B9F73472A6361FCA /* PollenProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenProvider.swift; sourceTree = "<group>"; };
+		6FE7B6DEE3047923DA737ACF /* PollenWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenWidgetView.swift; sourceTree = "<group>"; };
+		85567AB1FCAE74E6BD6FA918 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B71D2BF7E465CA9B08C43715 /* PollenWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PollenWidget.entitlements; sourceTree = "<group>"; };
+		D9F4CE23ABD356D8E242AEF9 /* PollenIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenIntent.swift; sourceTree = "<group>"; };
+		DD4408D65651973E16BC0050 /* PollenAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenAPI.swift; sourceTree = "<group>"; };
+		E2C6C089E73BFF583E7FAB1A /* PollenWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenWidgetBundle.swift; sourceTree = "<group>"; };
+		E844288C58A64177F5A4CC82 /* PollenModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenModels.swift; sourceTree = "<group>"; };
+		FD45FD243789449AC45CC33A /* Pollen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pollen.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FD61D0F44E9324F045EF2793 /* Pollen.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Pollen.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		6945E79BAD97CEE574EAAD91 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FD45FD243789449AC45CC33A /* Pollen.app */,
+				0FEE352F1BB595A93F7AAADA /* PollenWidget.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CF7945EAFEDF537BD056D6C5 = {
+			isa = PBXGroup;
+			children = (
+				F4059BE433829D3B28BB9FD9 /* Pollen */,
+				F927BAC0AD9714FE0802ACF4 /* PollenWidget */,
+				6945E79BAD97CEE574EAAD91 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F4059BE433829D3B28BB9FD9 /* Pollen */ = {
+			isa = PBXGroup;
+			children = (
+				85567AB1FCAE74E6BD6FA918 /* Assets.xcassets */,
+				2F7EAE15C1C9F9FB92253B7A /* ContentView.swift */,
+				146D58B73E9E00DC127318DC /* Info.plist */,
+				FD61D0F44E9324F045EF2793 /* Pollen.entitlements */,
+				37672E3466F674ABDAF835FE /* PollenApp.swift */,
+			);
+			path = Pollen;
+			sourceTree = "<group>";
+		};
+		F927BAC0AD9714FE0802ACF4 /* PollenWidget */ = {
+			isa = PBXGroup;
+			children = (
+				0E88B6CB1457C590B5CB0862 /* Assets.xcassets */,
+				125A9FFA905A70B2C683B8B3 /* Info.plist */,
+				DD4408D65651973E16BC0050 /* PollenAPI.swift */,
+				369D98ED026A1702CF4CAADF /* PollenChart.swift */,
+				D9F4CE23ABD356D8E242AEF9 /* PollenIntent.swift */,
+				E844288C58A64177F5A4CC82 /* PollenModels.swift */,
+				697127F9B9F73472A6361FCA /* PollenProvider.swift */,
+				48523D5528AA43CA75F31E87 /* PollenRisk.swift */,
+				B71D2BF7E465CA9B08C43715 /* PollenWidget.entitlements */,
+				19907E626C77B353D09E1A26 /* PollenWidget.swift */,
+				E2C6C089E73BFF583E7FAB1A /* PollenWidgetBundle.swift */,
+				6FE7B6DEE3047923DA737ACF /* PollenWidgetView.swift */,
+			);
+			path = PollenWidget;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0B6DEA5075774E493F9D5A15 /* PollenWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 73D54A0CFE0FAE6307FAA927 /* Build configuration list for PBXNativeTarget "PollenWidget" */;
+			buildPhases = (
+				98D3874492016DD4EBE66624 /* Sources */,
+				1CAF0CE9C2CA5BDB3F0EC4EB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PollenWidget;
+			packageProductDependencies = (
+			);
+			productName = PollenWidget;
+			productReference = 0FEE352F1BB595A93F7AAADA /* PollenWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		3A28356AC85B15769F21A57E /* Pollen */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 64163B7DA3C2C2AF8C051A7A /* Build configuration list for PBXNativeTarget "Pollen" */;
+			buildPhases = (
+				A3CE6DED78F70BC56E909704 /* Sources */,
+				79979FF0594CE36635F10CAD /* Resources */,
+				BAE786B396B0B4DD473896A3 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9EA0B8B4D2FD96330D79EEC3 /* PBXTargetDependency */,
+			);
+			name = Pollen;
+			packageProductDependencies = (
+			);
+			productName = Pollen;
+			productReference = FD45FD243789449AC45CC33A /* Pollen.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B4C2D564FBB6BCD8C2B04408 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					0B6DEA5075774E493F9D5A15 = {
+						ProvisioningStyle = Automatic;
+					};
+					3A28356AC85B15769F21A57E = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 43467CC9A81205DA5951B2F4 /* Build configuration list for PBXProject "Pollen" */;
+			developmentRegion = fr;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				fr,
+			);
+			mainGroup = CF7945EAFEDF537BD056D6C5;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 6945E79BAD97CEE574EAAD91 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3A28356AC85B15769F21A57E /* Pollen */,
+				0B6DEA5075774E493F9D5A15 /* PollenWidget */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1CAF0CE9C2CA5BDB3F0EC4EB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				98416D4B37CD48F15EEE9233 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		79979FF0594CE36635F10CAD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				08F39E349B46555EE3365C9F /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		98D3874492016DD4EBE66624 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A9B1CA99265457B597153D1D /* PollenAPI.swift in Sources */,
+				225059458EA8C45AE94EC36E /* PollenChart.swift in Sources */,
+				1E5D3A503756C4E4E55709B9 /* PollenIntent.swift in Sources */,
+				AF09C7523CA0A9F2043FA485 /* PollenModels.swift in Sources */,
+				E7233CCA075D038BF7A6895B /* PollenProvider.swift in Sources */,
+				E6A007B7E613A035A27C6FD2 /* PollenRisk.swift in Sources */,
+				4372507EC84DCF76C3815662 /* PollenWidget.swift in Sources */,
+				2CC5394C9AD0E375C0C36ECB /* PollenWidgetBundle.swift in Sources */,
+				0E819E449459A8F8E01F3C5A /* PollenWidgetView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A3CE6DED78F70BC56E909704 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ADF8BC4D9533E58AEC282963 /* ContentView.swift in Sources */,
+				87EE0D709D848C780EF30D4E /* PollenApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9EA0B8B4D2FD96330D79EEC3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0B6DEA5075774E493F9D5A15 /* PollenWidget */;
+			targetProxy = 5A14EC2221E688540E0DD903 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		11EB7861E941B9E7DFAFBC7D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Pollen/Pollen.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = Pollen/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.deleev.pollen;
+				PRODUCT_NAME = Pollen;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		5507D425CE3E134C96A13445 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		589212D4D00C62A636F985B5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Pollen/Pollen.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = Pollen/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.deleev.pollen;
+				PRODUCT_NAME = Pollen;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		625B8E2DAC2F9B6AB64730DC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		D0C61F2B70B94C45DF5C8226 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = PollenWidget/PollenWidget.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = PollenWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.deleev.pollen.widget;
+				PRODUCT_NAME = PollenWidget;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		E283F3F93A123E893392A64B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = PollenWidget/PollenWidget.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = PollenWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.deleev.pollen.widget;
+				PRODUCT_NAME = PollenWidget;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		43467CC9A81205DA5951B2F4 /* Build configuration list for PBXProject "Pollen" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5507D425CE3E134C96A13445 /* Debug */,
+				625B8E2DAC2F9B6AB64730DC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		64163B7DA3C2C2AF8C051A7A /* Build configuration list for PBXNativeTarget "Pollen" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				11EB7861E941B9E7DFAFBC7D /* Debug */,
+				589212D4D00C62A636F985B5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		73D54A0CFE0FAE6307FAA927 /* Build configuration list for PBXNativeTarget "PollenWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E283F3F93A123E893392A64B /* Debug */,
+				D0C61F2B70B94C45DF5C8226 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B4C2D564FBB6BCD8C2B04408 /* Project object */;
+}
