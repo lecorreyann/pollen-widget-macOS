@@ -23,7 +23,7 @@ enum PollenPeriod: String, AppEnum {
         switch self {
         case .today: "Aujourd'hui"
         case .tomorrow: "Demain"
-        case .week: "7 prochains jours"
+        case .week: "Sur 7 jours"
         }
     }
 
@@ -106,29 +106,175 @@ enum PollenKind: String, AppEnum, CaseIterable {
     static let switcherKinds: [PollenKind] = [.all, .max, .alder, .birch, .grass, .mugwort, .olive, .ragweed]
 }
 
+// MARK: - City Entity
+
+struct CityEntity: AppEntity, Identifiable, Hashable {
+    let id: String
+    let name: String
+    let country: String
+    let countryCode: String?
+    let admin1: String?
+    let latitude: Double
+    let longitude: Double
+
+    static var typeDisplayRepresentation: TypeDisplayRepresentation {
+        TypeDisplayRepresentation(name: "Ville")
+    }
+
+    static var defaultQuery = CityQuery()
+
+    var localizedCountry: String {
+        if let countryCode {
+            let frenchLocale = Locale(identifier: "fr_FR")
+            if let localized = frenchLocale.localizedString(forRegionCode: countryCode), !localized.isEmpty {
+                return localized
+            }
+        }
+        return country
+    }
+
+    var displayRepresentation: DisplayRepresentation {
+        var subtitleParts: [String] = []
+        if let admin1, !admin1.isEmpty, admin1 != name {
+            subtitleParts.append(admin1)
+        }
+        let cn = localizedCountry
+        if !cn.isEmpty {
+            subtitleParts.append(cn)
+        }
+        let subtitle = subtitleParts.joined(separator: ", ")
+
+        return DisplayRepresentation(
+            title: "\(name)",
+            subtitle: subtitle.isEmpty ? nil : "\(subtitle)"
+        )
+    }
+
+    static func encodeID(name: String, countryCode: String?, country: String, admin1: String?, latitude: Double, longitude: Double) -> String {
+        let safe: (String) -> String = { $0.replacingOccurrences(of: "|", with: " ") }
+        let parts = [
+            safe(name),
+            countryCode ?? "",
+            safe(country),
+            safe(admin1 ?? ""),
+            String(latitude),
+            String(longitude),
+        ]
+        return parts.joined(separator: "|")
+    }
+
+    static func decodeID(_ id: String) -> CityEntity? {
+        let parts = id.components(separatedBy: "|")
+        guard parts.count >= 6,
+              let lat = Double(parts[4]),
+              let lon = Double(parts[5]) else { return nil }
+        return CityEntity(
+            id: id,
+            name: parts[0],
+            country: parts[2],
+            countryCode: parts[1].isEmpty ? nil : parts[1],
+            admin1: parts[3].isEmpty ? nil : parts[3],
+            latitude: lat,
+            longitude: lon
+        )
+    }
+
+    static let paris = CityEntity(
+        id: encodeID(
+            name: "Paris",
+            countryCode: "FR",
+            country: "France",
+            admin1: "Île-de-France",
+            latitude: 48.8566,
+            longitude: 2.3522
+        ),
+        name: "Paris",
+        country: "France",
+        countryCode: "FR",
+        admin1: "Île-de-France",
+        latitude: 48.8566,
+        longitude: 2.3522
+    )
+
+    static let suggested: [CityEntity] = [
+        .paris,
+        CityEntity(
+            id: encodeID(name: "Lyon", countryCode: "FR", country: "France", admin1: "Auvergne-Rhône-Alpes", latitude: 45.7485, longitude: 4.8467),
+            name: "Lyon", country: "France", countryCode: "FR", admin1: "Auvergne-Rhône-Alpes", latitude: 45.7485, longitude: 4.8467
+        ),
+        CityEntity(
+            id: encodeID(name: "Marseille", countryCode: "FR", country: "France", admin1: "Provence-Alpes-Côte d'Azur", latitude: 43.2964, longitude: 5.3700),
+            name: "Marseille", country: "France", countryCode: "FR", admin1: "Provence-Alpes-Côte d'Azur", latitude: 43.2964, longitude: 5.3700
+        ),
+        CityEntity(
+            id: encodeID(name: "Toulouse", countryCode: "FR", country: "France", admin1: "Occitanie", latitude: 43.6043, longitude: 1.4437),
+            name: "Toulouse", country: "France", countryCode: "FR", admin1: "Occitanie", latitude: 43.6043, longitude: 1.4437
+        ),
+        CityEntity(
+            id: encodeID(name: "Nice", countryCode: "FR", country: "France", admin1: "Provence-Alpes-Côte d'Azur", latitude: 43.7102, longitude: 7.2620),
+            name: "Nice", country: "France", countryCode: "FR", admin1: "Provence-Alpes-Côte d'Azur", latitude: 43.7102, longitude: 7.2620
+        ),
+    ]
+}
+
+struct CityQuery: EntityStringQuery {
+    func entities(for identifiers: [CityEntity.ID]) async throws -> [CityEntity] {
+        identifiers.compactMap { CityEntity.decodeID($0) }
+    }
+
+    func entities(matching string: String) async throws -> [CityEntity] {
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return CityEntity.suggested }
+        let candidates = try await PollenAPI.geocodeCandidates(for: trimmed)
+        return candidates.map { result in
+            let id = CityEntity.encodeID(
+                name: result.name,
+                countryCode: result.country_code,
+                country: result.country ?? "",
+                admin1: result.admin1,
+                latitude: result.latitude,
+                longitude: result.longitude
+            )
+            return CityEntity(
+                id: id,
+                name: result.name,
+                country: result.country ?? "",
+                countryCode: result.country_code,
+                admin1: result.admin1,
+                latitude: result.latitude,
+                longitude: result.longitude
+            )
+        }
+    }
+
+    func suggestedEntities() async throws -> [CityEntity] {
+        CityEntity.suggested
+    }
+}
+
+// MARK: - Configuration intent
+
 struct PollenConfigurationIntent: WidgetConfigurationIntent {
     static var title: LocalizedStringResource { "Configuration Pollen" }
     static var description: IntentDescription {
         IntentDescription("Affiche le taux de pollen pour une ville donnée.")
     }
 
-    @Parameter(
-        title: "Ville",
-        description: "Nom de ville. Ajoutez le code pays pour lever l'ambiguïté (ex. Valencia, ES).",
-        default: "Paris"
-    )
-    var city: String
-
-    @Parameter(title: "Période par défaut", default: .today)
-    var period: PollenPeriod
+    @Parameter(title: "Ville")
+    var city: CityEntity?
 
     init() {}
 
-    init(city: String, period: PollenPeriod) {
+    init(city: CityEntity?) {
         self.city = city
-        self.period = period
+    }
+
+    var resolvedCity: CityEntity {
+        city ?? .paris
     }
 }
+
+// MARK: - Local navigation state
 
 enum SelectedPeriodStore {
     private static let key = "selectedPeriod"

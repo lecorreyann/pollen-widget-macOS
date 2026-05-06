@@ -12,7 +12,7 @@ struct PollenWidget: Widget {
         ) { entry in
             PollenWidgetView(entry: entry)
                 .containerBackground(for: .widget) {
-                    BackgroundView(entry: entry)
+                    AtmosphericBackground(entry: entry)
                 }
         }
         .configurationDisplayName("Pollen")
@@ -21,26 +21,28 @@ struct PollenWidget: Widget {
     }
 }
 
-private struct BackgroundView: View {
+private struct AtmosphericBackground: View {
     let entry: PollenEntry
 
     var body: some View {
+        let risk = entry.headline.map { PollenRisk.from($0.value) } ?? .low
         ZStack {
             Color(nsColor: .windowBackgroundColor)
-            if let h = entry.headline {
-                let risk = PollenRisk.from(h.value)
-                LinearGradient(
-                    stops: [
-                        .init(color: risk.color.opacity(0.22), location: 0.0),
-                        .init(color: risk.color.opacity(0.06), location: 0.55),
-                        .init(color: Color.clear, location: 1.0),
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            } else {
-                Color.primary.opacity(0.04)
-            }
+            MeshGradient(
+                width: 3,
+                height: 3,
+                points: [
+                    SIMD2<Float>(0.0, 0.0),  SIMD2<Float>(0.5, 0.0),  SIMD2<Float>(1.0, 0.0),
+                    SIMD2<Float>(0.0, 0.45), SIMD2<Float>(0.55, 0.4), SIMD2<Float>(1.0, 0.5),
+                    SIMD2<Float>(0.0, 1.0),  SIMD2<Float>(0.5, 1.0),  SIMD2<Float>(1.0, 1.0),
+                ],
+                colors: [
+                    risk.color.opacity(0.32), risk.color.opacity(0.20), risk.color.opacity(0.08),
+                    risk.color.opacity(0.18), risk.color.opacity(0.10), Color.clear,
+                    Color.clear, Color.clear, Color.clear,
+                ],
+                smoothsColors: true
+            )
         }
     }
 }

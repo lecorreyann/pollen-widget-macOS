@@ -16,7 +16,7 @@ struct PollenChart: View {
     }
 
     private var maxY: Double {
-        max(displayedMaxValue * 1.20, 120)
+        max(displayedMaxValue * 1.30, 100)
     }
 
     private var xStart: Date {
@@ -48,18 +48,23 @@ struct PollenChart: View {
         return (kind, m)
     }
 
-    private func locationStops(for value: Double) -> Double {
-        max(0, min(1, value / maxY))
+    private var nowSample: PollenSample? {
+        guard period == .today else { return nil }
+        let now = Date()
+        guard now >= xStart && now <= xEnd else { return nil }
+        return samples.min(by: {
+            abs($0.date.timeIntervalSince(now)) < abs($1.date.timeIntervalSince(now))
+        })
     }
 
     private var lineGradient: LinearGradient {
         LinearGradient(
             stops: [
                 .init(color: PollenRisk.low.color, location: 0.0),
-                .init(color: PollenRisk.low.color, location: locationStops(for: 18)),
-                .init(color: PollenRisk.moderate.color, location: locationStops(for: 35)),
-                .init(color: PollenRisk.high.color, location: locationStops(for: 75)),
-                .init(color: PollenRisk.veryHigh.color, location: locationStops(for: 130)),
+                .init(color: PollenRisk.low.color, location: locStop(18)),
+                .init(color: PollenRisk.moderate.color, location: locStop(35)),
+                .init(color: PollenRisk.high.color, location: locStop(75)),
+                .init(color: PollenRisk.veryHigh.color, location: locStop(130)),
                 .init(color: PollenRisk.veryHigh.color, location: 1.0),
             ],
             startPoint: UnitPoint(x: 0.5, y: 1.0),
@@ -71,25 +76,34 @@ struct PollenChart: View {
         LinearGradient(
             stops: [
                 .init(color: PollenRisk.low.color.opacity(0.0), location: 0.0),
-                .init(color: PollenRisk.low.color.opacity(0.20), location: locationStops(for: 20)),
-                .init(color: PollenRisk.moderate.color.opacity(0.25), location: locationStops(for: 50)),
-                .init(color: PollenRisk.high.color.opacity(0.30), location: locationStops(for: 100)),
-                .init(color: PollenRisk.veryHigh.color.opacity(0.35), location: 1.0),
+                .init(color: PollenRisk.low.color.opacity(0.30), location: locStop(20)),
+                .init(color: PollenRisk.moderate.color.opacity(0.40), location: locStop(50)),
+                .init(color: PollenRisk.high.color.opacity(0.45), location: locStop(100)),
+                .init(color: PollenRisk.veryHigh.color.opacity(0.50), location: 1.0),
             ],
             startPoint: .bottom,
             endPoint: .top
         )
     }
 
-    private var yGridValues: [Double] {
-        var values: [Double] = [0, 20, 50, 100]
-        if maxY > 150 { values.append(150) }
-        if maxY > 200 { values.append(200) }
-        return values.filter { $0 <= maxY }
+    private func locStop(_ v: Double) -> Double {
+        max(0, min(1, v / maxY))
     }
 
     var body: some View {
         Chart {
+            // Subtle threshold reference (only at high/very-high)
+            if maxY > 50 {
+                RuleMark(y: .value("Seuil", 50))
+                    .foregroundStyle(.secondary.opacity(0.10))
+                    .lineStyle(StrokeStyle(lineWidth: 0.5, dash: [3, 4]))
+            }
+            if maxY > 100 {
+                RuleMark(y: .value("Seuil", 100))
+                    .foregroundStyle(.secondary.opacity(0.12))
+                    .lineStyle(StrokeStyle(lineWidth: 0.5, dash: [3, 4]))
+            }
+
             if kind == .all {
                 ForEach(PollenKind.concreteKinds, id: \.self) { k in
                     if let list = allKindSamples[k] {
@@ -106,7 +120,6 @@ struct PollenChart: View {
                     }
                 }
             } else {
-                // Area
                 ForEach(samples) { sample in
                     AreaMark(
                         x: .value("Date", sample.date),
@@ -116,18 +129,16 @@ struct PollenChart: View {
                     .interpolationMethod(.catmullRom)
                 }
 
-                // Line with risk gradient
                 ForEach(samples) { sample in
                     LineMark(
                         x: .value("Date", sample.date),
                         y: .value("Pollen", sample.value)
                     )
                     .foregroundStyle(lineGradient)
-                    .lineStyle(StrokeStyle(lineWidth: 2.4, lineCap: .round, lineJoin: .round))
+                    .lineStyle(StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round))
                     .interpolationMethod(.catmullRom)
                 }
 
-                // Points on week view
                 if period == .week {
                     ForEach(samples) { sample in
                         PointMark(
@@ -135,51 +146,69 @@ struct PollenChart: View {
                             y: .value("Pollen", sample.value)
                         )
                         .foregroundStyle(PollenRisk.from(sample.value).color)
-                        .symbolSize(38)
+                        .symbolSize(35)
                     }
                 }
             }
 
-            // Peak annotation
-            if let peak = peakSample, peak.sample.value > 5 {
+            // Now indicator + ghost pill (today only, single kind)
+            if period == .today, kind != .all, let n = nowSample {
+                let nowRisk = PollenRisk.from(n.value)
+                RuleMark(x: .value("Maintenant", n.date))
+                    .foregroundStyle(.primary.opacity(0.20))
+                    .lineStyle(StrokeStyle(lineWidth: 0.5, dash: [3, 3]))
+
                 PointMark(
-                    x: .value("Date", peak.sample.date),
-                    y: .value("Pollen", peak.sample.value)
+                    x: .value("Date", n.date),
+                    y: .value("Pollen", n.value)
                 )
-                .foregroundStyle(kind == .all ? peak.kind.color : PollenRisk.from(peak.sample.value).color)
-                .symbolSize(compact ? 30 : 50)
-                .annotation(position: .top, alignment: .center, spacing: 2) {
-                    Text("\(Int(peak.sample.value.rounded()))")
-                        .font(.system(size: compact ? 8 : 10, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.primary)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
-                        .background(.regularMaterial, in: Capsule())
-                        .overlay(
-                            Capsule()
-                                .stroke(
-                                    (kind == .all ? peak.kind.color : PollenRisk.from(peak.sample.value).color).opacity(0.35),
-                                    lineWidth: 0.5
-                                )
-                        )
+                .symbol(.circle)
+                .symbolSize(60)
+                .foregroundStyle(.background)
+                .annotation(position: .bottom, alignment: .center, spacing: 2) {
+                    Text("maintenant")
+                        .font(.system(size: compact ? 8 : 9, weight: .medium, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+
+                PointMark(
+                    x: .value("Date", n.date),
+                    y: .value("Pollen", n.value)
+                )
+                .symbol(Circle().strokeBorder(lineWidth: 1.5))
+                .symbolSize(60)
+                .foregroundStyle(nowRisk.color)
+                .annotation(position: .top, alignment: .center, spacing: 4) {
+                    NowPill(value: n.value)
                 }
             }
 
-            // Now indicator (today only)
-            if period == .today {
-                let now = Date()
-                if now >= xStart && now <= xEnd {
-                    RuleMark(x: .value("Maintenant", now))
-                        .foregroundStyle(Color.primary.opacity(0.30))
-                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+            // Peak pill (the one big highlight)
+            if let peak = peakSample, peak.sample.value > 5 {
+                let peakColor: Color = kind == .all ? peak.kind.color : PollenRisk.from(peak.sample.value).color
+                let pickedDifferentFromNow: Bool = {
+                    guard let n = nowSample else { return true }
+                    return abs(n.date.timeIntervalSince(peak.sample.date)) > 1800
+                }()
+
+                if pickedDifferentFromNow {
+                    // Solid filled marker for peak (more prominent)
+                    PointMark(
+                        x: .value("Date", peak.sample.date),
+                        y: .value("Pollen", peak.sample.value)
+                    )
+                    .symbol(.circle)
+                    .symbolSize(80)
+                    .foregroundStyle(peakColor)
+                    .annotation(position: .top, alignment: .center, spacing: 4) {
+                        PeakPill(value: peak.sample.value, kind: kind == .all ? peak.kind : nil, color: peakColor)
+                    }
                 }
             }
         }
         .chartYScale(domain: 0...maxY)
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: period == .week ? 7 : 4)) { value in
-                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                    .foregroundStyle(.secondary.opacity(0.10))
+            AxisMarks(values: .automatic(desiredCount: period == .week ? 7 : 5)) { value in
                 AxisValueLabel(centered: false) {
                     if let date = value.as(Date.self) {
                         Group {
@@ -189,25 +218,59 @@ struct PollenChart: View {
                                 Text(date, format: .dateTime.hour(.defaultDigits(amPM: .omitted)))
                             }
                         }
-                        .font(.system(size: compact ? 8 : 9, weight: .medium))
+                        .font(.system(size: compact ? 8 : 9, weight: .regular, design: .rounded))
                         .foregroundStyle(.secondary)
                     }
                 }
             }
         }
-        .chartYAxis {
-            AxisMarks(position: .leading, values: yGridValues) { value in
-                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                    .foregroundStyle(.secondary.opacity(0.18))
-                AxisValueLabel(anchor: .trailing) {
-                    if let v = value.as(Double.self) {
-                        Text("\(Int(v))")
-                            .font(.system(size: compact ? 8 : 9, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
-                }
+        .chartYAxis(.hidden)
+        .chartLegend(.hidden)
+    }
+}
+
+struct PeakPill: View {
+    let value: Double
+    let kind: PollenKind?
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text("\(Int(value.rounded()))")
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+            if let kind {
+                Text(kind.shortLabel.lowercased())
+                    .font(.system(size: 9, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.85))
             }
         }
-        .chartLegend(.hidden)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(
+            Capsule(style: .continuous)
+                .fill(color.gradient)
+                .shadow(color: color.opacity(0.35), radius: 5, x: 0, y: 2)
+        )
+    }
+}
+
+struct NowPill: View {
+    let value: Double
+
+    var body: some View {
+        Text("\(Int(value.rounded()))")
+            .font(.system(size: 10, weight: .medium, design: .rounded))
+            .foregroundStyle(.primary.opacity(0.85))
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(.regularMaterial)
+            )
+            .overlay(
+                Capsule(style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.10), lineWidth: 0.5)
+            )
     }
 }

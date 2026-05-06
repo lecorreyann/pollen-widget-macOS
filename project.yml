@@ -2,7 +2,7 @@ name: Pollen
 options:
   bundleIdPrefix: com.deleev
   deploymentTarget:
-    macOS: "14.0"
+    macOS: "15.0"
   developmentLanguage: fr
   createIntermediateGroups: true
 configs:
@@ -11,7 +11,7 @@ configs:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
     CODE_SIGN_STYLE: Automatic
     GENERATE_INFOPLIST_FILE: NO
     ENABLE_USER_SCRIPT_SANDBOXING: YES

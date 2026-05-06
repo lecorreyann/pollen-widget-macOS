@@ -22,8 +22,8 @@ struct PollenProvider: AppIntentTimelineProvider {
             configuration: PollenConfigurationIntent(),
             currentPeriod: .today,
             currentKind: .max,
-            cityName: "Paris",
-            citySubtitle: "Île-de-France · France",
+            cityName: CityEntity.paris.name,
+            citySubtitle: CityEntity.paris.localizedCountry,
             samples: maxSamples,
             allKindSamples: allSamples,
             error: nil
@@ -38,54 +38,128 @@ struct PollenProvider: AppIntentTimelineProvider {
     }
 
     func timeline(for configuration: PollenConfigurationIntent, in context: Context) async -> Timeline<PollenEntry> {
-        let entry = await fetch(configuration: configuration)
-        let nextRefresh = Date().addingTimeInterval(60 * 60)
-        return Timeline(entries: [entry], policy: .after(nextRefresh))
-    }
-
-    private func fetch(configuration: PollenConfigurationIntent) async -> PollenEntry {
-        let period = SelectedPeriodStore.read(default: configuration.period)
+        let period = SelectedPeriodStore.read(default: .today)
         let kind = SelectedKindStore.read(default: .max)
+        let city = configuration.resolvedCity
+
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Fetch enough days to cover today rolling forward into tomorrow
+        let days: Int
+        switch period {
+        case .today: days = 2
+        case .tomorrow: days = 3
+        case .week: days = 8
+        }
+
         do {
-            let city = try await PollenAPI.geocode(city: configuration.city)
-            let days: Int
-            switch period {
-            case .today: days = 1
-            case .tomorrow: days = 2
-            case .week: days = 7
+            let response = try await PollenAPI.airQuality(
+                latitude: city.latitude,
+                longitude: city.longitude,
+                days: days
+            )
+
+            // Build display dates: hourly snapshots over the next 24h, plus a forced one
+            // just past midnight so the day boundary always triggers a new entry.
+            var displayDates: [Date] = []
+            for hourOffset in stride(from: 0, through: 24, by: 2) {
+                if let d = calendar.date(byAdding: .hour, value: hourOffset, to: now) {
+                    displayDates.append(d)
+                }
             }
-            let response = try await PollenAPI.airQuality(latitude: city.latitude, longitude: city.longitude, days: days)
-            let allKind = PollenAPI.samplesByKind(for: response, period: period)
-            let displayed: [PollenSample]
-            if kind == .max || kind == .all {
-                displayed = PollenAPI.maxSamples(from: allKind)
-            } else {
-                displayed = allKind[kind] ?? []
+            if let nextDay = calendar.date(byAdding: .day, value: 1, to: now),
+               let midnight = calendar.date(bySettingHour: 0, minute: 1, second: 0, of: nextDay),
+               midnight > now {
+                if !displayDates.contains(where: { abs($0.timeIntervalSince(midnight)) < 30 * 60 }) {
+                    displayDates.append(midnight)
+                }
             }
-            return PollenEntry(
-                date: Date(),
+            displayDates.sort()
+
+            let entries = displayDates.map { date in
+                makeEntry(
+                    at: date,
+                    configuration: configuration,
+                    period: period,
+                    kind: kind,
+                    city: city,
+                    response: response
+                )
+            }
+
+            let lastDate = entries.last?.date ?? now.addingTimeInterval(3600)
+            return Timeline(entries: entries, policy: .after(lastDate))
+        } catch {
+            let errorEntry = PollenEntry(
+                date: now,
                 configuration: configuration,
                 currentPeriod: period,
                 currentKind: kind,
                 cityName: city.name,
-                citySubtitle: city.subtitle,
-                samples: displayed,
-                allKindSamples: allKind,
-                error: nil
+                citySubtitle: city.localizedCountry,
+                samples: [],
+                allKindSamples: [:],
+                error: error.localizedDescription
             )
+            return Timeline(entries: [errorEntry], policy: .after(now.addingTimeInterval(15 * 60)))
+        }
+    }
+
+    private func fetch(configuration: PollenConfigurationIntent) async -> PollenEntry {
+        let period = SelectedPeriodStore.read(default: .today)
+        let kind = SelectedKindStore.read(default: .max)
+        let city = configuration.resolvedCity
+        do {
+            let days: Int
+            switch period {
+            case .today: days = 2
+            case .tomorrow: days = 3
+            case .week: days = 8
+            }
+            let response = try await PollenAPI.airQuality(latitude: city.latitude, longitude: city.longitude, days: days)
+            return makeEntry(at: Date(), configuration: configuration, period: period, kind: kind, city: city, response: response)
         } catch {
             return PollenEntry(
                 date: Date(),
                 configuration: configuration,
                 currentPeriod: period,
                 currentKind: kind,
-                cityName: configuration.city,
-                citySubtitle: "",
+                cityName: city.name,
+                citySubtitle: city.localizedCountry,
                 samples: [],
                 allKindSamples: [:],
                 error: error.localizedDescription
             )
         }
+    }
+
+    private func makeEntry(
+        at displayDate: Date,
+        configuration: PollenConfigurationIntent,
+        period: PollenPeriod,
+        kind: PollenKind,
+        city: CityEntity,
+        response: AirQualityResponse
+    ) -> PollenEntry {
+        let allKind = PollenAPI.samplesByKind(for: response, period: period, referenceDate: displayDate)
+        let displayed: [PollenSample]
+        if kind == .max || kind == .all {
+            displayed = PollenAPI.maxSamples(from: allKind)
+        } else {
+            displayed = allKind[kind] ?? []
+        }
+        return PollenEntry(
+            date: displayDate,
+            configuration: configuration,
+            currentPeriod: period,
+            currentKind: kind,
+            cityName: city.name,
+            citySubtitle: city.localizedCountry,
+            samples: displayed,
+            allKindSamples: allKind,
+            error: nil
+        )
     }
 }
 
@@ -115,13 +189,16 @@ extension PollenEntry {
             guard let s = samples.min(by: {
                 abs($0.date.timeIntervalSince(now)) < abs($1.date.timeIntervalSince(now))
             }) else { return nil }
-            return Headline(label: kindLabel ?? "Maintenant", value: s.value, kind: nil)
+            let label = kindLabel.map { "Maintenant · \($0)" } ?? "Maintenant"
+            return Headline(label: label, value: s.value, kind: nil)
         case .tomorrow:
             guard let s = samples.max(by: { $0.value < $1.value }) else { return nil }
-            return Headline(label: kindLabel.map { "Pic \($0)" } ?? "Pic demain", value: s.value, kind: nil)
+            let label = kindLabel.map { "Demain · \($0)" } ?? "Demain"
+            return Headline(label: label, value: s.value, kind: nil)
         case .week:
             guard let s = samples.max(by: { $0.value < $1.value }) else { return nil }
-            return Headline(label: kindLabel.map { "Pic \($0)" } ?? "Pic 7 j.", value: s.value, kind: nil)
+            let label = kindLabel.map { "Sur 7 jours · \($0)" } ?? "Sur 7 jours"
+            return Headline(label: label, value: s.value, kind: nil)
         }
     }
 
@@ -140,7 +217,7 @@ extension PollenEntry {
                 }
             }
             guard let best else { return nil }
-            return Headline(label: "Dominant : \(best.kind.label)", value: best.value, kind: best.kind)
+            return Headline(label: "Maintenant · \(best.kind.label)", value: best.value, kind: best.kind)
         case .tomorrow, .week:
             var best: (kind: PollenKind, value: Double)?
             for kind in PollenKind.concreteKinds {
@@ -151,8 +228,8 @@ extension PollenEntry {
                 }
             }
             guard let best else { return nil }
-            let lbl = currentPeriod == .tomorrow ? "Pic demain · \(best.kind.label)" : "Pic 7 j. · \(best.kind.label)"
-            return Headline(label: lbl, value: best.value, kind: best.kind)
+            let prefix = currentPeriod == .tomorrow ? "Demain" : "Sur 7 jours"
+            return Headline(label: "\(prefix) · \(best.kind.label)", value: best.value, kind: best.kind)
         }
     }
 }
