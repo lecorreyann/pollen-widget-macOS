@@ -6,20 +6,44 @@ struct PollenWidgetView: View {
     let entry: PollenEntry
 
     var body: some View {
-        Group {
-            if let error = entry.error {
-                ErrorView(message: error, city: entry.cityName)
-            } else if entry.samples.isEmpty && entry.allKindSamples.isEmpty {
-                ErrorView(message: "Pas de données disponibles", city: entry.cityName)
-            } else {
-                switch family {
-                case .systemSmall: SmallView(entry: entry)
-                case .systemMedium: MediumView(entry: entry)
-                case .systemLarge: LargeView(entry: entry)
-                default: MediumView(entry: entry)
-                }
-            }
+        switch family {
+        case .systemSmall: SmallView(entry: entry)
+        case .systemMedium: MediumView(entry: entry)
+        case .systemLarge: LargeView(entry: entry)
+        default: MediumView(entry: entry)
         }
+    }
+}
+
+// MARK: - Empty / error placeholder for chart area
+
+struct ChartFallback: View {
+    let message: String
+    var compact: Bool = false
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: compact ? 16 : 22))
+                .foregroundStyle(.orange.opacity(0.75))
+            Text(message)
+                .font(.system(size: compact ? 9 : 11, weight: .regular, design: .rounded))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .lineLimit(3)
+        }
+        .padding(.horizontal, 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private extension PollenEntry {
+    var fallbackMessage: String? {
+        if let error { return error }
+        if samples.isEmpty && allKindSamples.isEmpty {
+            return "Pas de données disponibles pour cette période"
+        }
+        return nil
     }
 }
 
@@ -204,7 +228,10 @@ private struct SmallView: View {
                 }
             }
             Spacer(minLength: 0)
-            if let h = entry.headline {
+            if let fallback = entry.fallbackMessage {
+                ChartFallback(message: fallback, compact: true)
+                    .invalidatableContent()
+            } else if let h = entry.headline {
                 HeadlineView(label: h.label, value: h.value, size: .small)
                     .invalidatableContent()
             }
@@ -238,13 +265,19 @@ private struct MediumView: View {
                 PeriodSwitcher(current: entry.currentPeriod)
             }
 
-            PollenChart(
-                kind: entry.currentKind,
-                samples: entry.samples,
-                allKindSamples: entry.allKindSamples,
-                period: entry.currentPeriod,
-                compact: true
-            )
+            Group {
+                if let fallback = entry.fallbackMessage {
+                    ChartFallback(message: fallback, compact: true)
+                } else {
+                    PollenChart(
+                        kind: entry.currentKind,
+                        samples: entry.samples,
+                        allKindSamples: entry.allKindSamples,
+                        period: entry.currentPeriod,
+                        compact: true
+                    )
+                }
+            }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .invalidatableContent()
 
@@ -291,12 +324,18 @@ private struct LargeView: View {
                 PeriodSwitcher(current: entry.currentPeriod)
             }
 
-            PollenChart(
-                kind: entry.currentKind,
-                samples: entry.samples,
-                allKindSamples: entry.allKindSamples,
-                period: entry.currentPeriod
-            )
+            Group {
+                if let fallback = entry.fallbackMessage {
+                    ChartFallback(message: fallback)
+                } else {
+                    PollenChart(
+                        kind: entry.currentKind,
+                        samples: entry.samples,
+                        allKindSamples: entry.allKindSamples,
+                        period: entry.currentPeriod
+                    )
+                }
+            }
             .frame(maxHeight: .infinity)
             .invalidatableContent()
 
@@ -345,28 +384,6 @@ struct LargeHeadline: View {
                     .foregroundStyle(risk.color)
             }
         }
-    }
-}
-
-// MARK: - Error
-
-private struct ErrorView: View {
-    let message: String
-    let city: String
-
-    var body: some View {
-        VStack(spacing: 6) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.title2)
-                .foregroundStyle(.orange)
-            Text(city).font(.headline)
-            Text(message)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

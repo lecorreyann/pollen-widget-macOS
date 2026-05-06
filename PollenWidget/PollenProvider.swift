@@ -50,7 +50,7 @@ struct PollenProvider: AppIntentTimelineProvider {
         switch period {
         case .today: days = 2
         case .tomorrow: days = 3
-        case .week: days = 8
+        case .week: days = 7
         }
 
         do {
@@ -115,7 +115,7 @@ struct PollenProvider: AppIntentTimelineProvider {
             switch period {
             case .today: days = 2
             case .tomorrow: days = 3
-            case .week: days = 8
+            case .week: days = 7
             }
             let response = try await PollenAPI.airQuality(latitude: city.latitude, longitude: city.longitude, days: days)
             return makeEntry(at: Date(), configuration: configuration, period: period, kind: kind, city: city, response: response)
