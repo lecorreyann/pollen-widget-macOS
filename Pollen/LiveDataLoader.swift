@@ -7,6 +7,7 @@ final class LiveDataLoader: ObservableObject {
     @Published var resolvedCityName: String = ""
     @Published var resolvedCountry: String = ""
     @Published var windows: [LiveWindow] = []
+    @Published var currentSnapshot: DataSnapshot?
     @Published var loading: Bool = false
     @Published var errorMessage: String?
 
@@ -46,6 +47,10 @@ final class LiveDataLoader: ObservableObject {
                 from: response,
                 ambee: ambeeResp,
                 cityName: first.name
+            )
+            currentSnapshot = LiveInterpreter.currentSnapshot(
+                from: response,
+                ambee: ambeeResp
             )
         } catch {
             errorMessage = error.localizedDescription

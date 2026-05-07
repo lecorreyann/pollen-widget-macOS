@@ -2,12 +2,14 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var loader = LiveDataLoader()
+    @StateObject private var journal = SymptomJournal()
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 Header()
                 LiveSection(loader: loader)
+                JournalSection(journal: journal, loader: loader)
                 PollenSection()
                 AirSection()
                 EyesSection()

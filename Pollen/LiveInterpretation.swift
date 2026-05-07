@@ -23,6 +23,36 @@ struct LiveWindow: Identifiable {
 }
 
 enum LiveInterpreter {
+    /// Snapshot des valeurs à l'heure actuelle pour chaque pollen / polluant.
+    static func currentSnapshot(
+        from response: AirQualityResponse,
+        ambee: AmbeeForecastResponse?,
+        now: Date = Date()
+    ) -> DataSnapshot {
+        var values: [String: Double] = [:]
+        for kind in PollenKind.concreteKinds + PollenKind.airKinds {
+            let samples = PollenAPI.samples(for: response, kind: kind, period: .week, referenceDate: now)
+            if let nearest = samples.min(by: {
+                abs($0.date.timeIntervalSince(now)) < abs($1.date.timeIntervalSince(now))
+            }) {
+                values[kind.rawValue] = nearest.value
+            }
+        }
+        if let ambee {
+            let ambeeKind = PollenAPI.samplesByKindFromAmbee(ambee, period: .week, referenceDate: now)
+            let openMeteoCovered: Set<PollenKind> = [.alder, .birch, .grass, .mugwort, .olive, .ragweed]
+            for (kind, samples) in ambeeKind where !samples.isEmpty {
+                if openMeteoCovered.contains(kind) { continue }
+                if let nearest = samples.min(by: {
+                    abs($0.date.timeIntervalSince(now)) < abs($1.date.timeIntervalSince(now))
+                }) {
+                    values[kind.rawValue] = nearest.value
+                }
+            }
+        }
+        return DataSnapshot(values: values)
+    }
+
     /// Construit une série de fenêtres pour aujourd'hui et demain, avec interprétation.
     static func windows(
         from response: AirQualityResponse,
