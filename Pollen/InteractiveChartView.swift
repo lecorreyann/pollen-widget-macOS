@@ -48,6 +48,28 @@ struct InteractiveChartView: View {
         return (all.first ?? Date(), all.last ?? Date().addingTimeInterval(3600))
     }
 
+    /// Domaine X complet : du début de la période au début du jour suivant
+    /// (ou +7 jours pour la semaine), pour que le chart couvre 23h-00h sans coupe.
+    private var xDomain: ClosedRange<Date> {
+        let calendar = Calendar.current
+        let now = Date()
+        switch period {
+        case .today:
+            let start = calendar.startOfDay(for: now)
+            let end = calendar.date(byAdding: .day, value: 1, to: start) ?? now.addingTimeInterval(86400)
+            return start...end
+        case .tomorrow:
+            let today = calendar.startOfDay(for: now)
+            let start = calendar.date(byAdding: .day, value: 1, to: today) ?? today
+            let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start.addingTimeInterval(86400)
+            return start...end
+        case .week:
+            let start = calendar.startOfDay(for: now)
+            let end = calendar.date(byAdding: .day, value: 7, to: start) ?? start.addingTimeInterval(7 * 86400)
+            return start...end
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .center, spacing: 10) {
@@ -151,6 +173,7 @@ struct InteractiveChartView: View {
             }
         }
         .chartYScale(domain: 0...maxY)
+        .chartXScale(domain: xDomain)
         .chartXSelection(value: $hoveredDate)
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: period == .week ? 7 : 9)) { value in

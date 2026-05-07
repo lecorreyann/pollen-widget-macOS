@@ -108,6 +108,28 @@ struct PollenChart: View {
         return .dateTime.hour(.defaultDigits(amPM: .omitted)).minute()
     }
 
+    /// Domaine X aligné sur la période (00h-24h pour aujourd'hui/demain),
+    /// pour que la courbe et la grille couvrent toute la journée.
+    private var xDomain: ClosedRange<Date> {
+        let calendar = Calendar.current
+        let now = Date()
+        switch period {
+        case .today:
+            let start = calendar.startOfDay(for: now)
+            let end = calendar.date(byAdding: .day, value: 1, to: start) ?? now.addingTimeInterval(86400)
+            return start...end
+        case .tomorrow:
+            let today = calendar.startOfDay(for: now)
+            let start = calendar.date(byAdding: .day, value: 1, to: today) ?? today
+            let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start.addingTimeInterval(86400)
+            return start...end
+        case .week:
+            let start = calendar.startOfDay(for: now)
+            let end = calendar.date(byAdding: .day, value: 7, to: start) ?? start.addingTimeInterval(7 * 86400)
+            return start...end
+        }
+    }
+
     private var yGridValues: [Double] {
         if kind == .air {
             var step: Double = 25
@@ -240,6 +262,7 @@ struct PollenChart: View {
             }
         }
         .chartYScale(domain: 0...maxY)
+        .chartXScale(domain: xDomain)
         .chartXAxis {
             let count: Int = period == .week ? 7 : (compact ? 6 : 9)
             AxisMarks(values: .automatic(desiredCount: count)) { value in
