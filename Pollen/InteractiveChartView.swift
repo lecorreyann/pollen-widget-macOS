@@ -9,13 +9,19 @@ struct InteractiveChartView: View {
     @State private var period: PollenPeriod = .today
     @State private var mode: PollenKind = .all
     @State private var hoveredDate: Date?
+    /// Cache des séries par espèce. Recalculé uniquement quand la période, le mode
+    /// ou le payload data changent — pas à chaque mouvement de souris.
+    @State private var byKind: [PollenKind: [PollenSample]] = [:]
 
     private var personalAllergens: Set<PollenKind> {
         Set(journal.personalAllergens.map { $0.kind })
     }
 
-    private var byKind: [PollenKind: [PollenSample]] {
-        guard let response = loader.response else { return [:] }
+    private func recomputeByKind() {
+        guard let response = loader.response else {
+            byKind = [:]
+            return
+        }
         var result: [PollenKind: [PollenSample]] = [:]
         let kinds = mode == .air ? PollenKind.airKinds : PollenKind.concreteKinds
         for kind in kinds {
@@ -29,7 +35,7 @@ struct InteractiveChartView: View {
                 result[kind] = samples
             }
         }
-        return result
+        byKind = result
     }
 
     private var displayedKinds: [PollenKind] {
@@ -141,6 +147,10 @@ struct InteractiveChartView: View {
                 .padding(.horizontal, 4)
             }
         }
+        .onAppear { recomputeByKind() }
+        .onChange(of: period) { _, _ in recomputeByKind() }
+        .onChange(of: mode) { _, _ in recomputeByKind() }
+        .onChange(of: loader.dataVersion) { _, _ in recomputeByKind() }
     }
 
     @ViewBuilder

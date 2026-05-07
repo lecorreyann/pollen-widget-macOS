@@ -11,6 +11,8 @@ final class LiveDataLoader: ObservableObject {
     @Published var currentSnapshot: DataSnapshot?
     @Published var loading: Bool = false
     @Published var errorMessage: String?
+    /// Bumpé après chaque load() réussi pour que les vues détectent un nouveau payload.
+    @Published var dataVersion: UUID = UUID()
 
     var hasData: Bool { response != nil }
 
@@ -52,6 +54,7 @@ final class LiveDataLoader: ObservableObject {
                 from: response,
                 ambee: ambeeResp
             )
+            self.dataVersion = UUID()
         } catch {
             errorMessage = error.localizedDescription
         }
