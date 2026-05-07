@@ -102,8 +102,11 @@ enum LiveInterpreter {
             let dayStart = def.dayStart
             guard let windowStart = calendar.date(byAdding: .hour, value: startHour, to: dayStart),
                   let windowEnd = calendar.date(byAdding: .hour, value: endHour, to: dayStart) else { continue }
-            // Skip windows entirely in the past
-            if windowEnd <= now { continue }
+            // « Maintenant » est la seule fenêtre autorisée à chevaucher le présent.
+            // Les autres ne sont affichées que si elles n'ont pas encore commencé,
+            // sinon on aurait par exemple « Cet après-midi 14h-19h » à 16h alors
+            // que la moitié est déjà consommée et que « Maintenant » la couvre.
+            if def.title != "Maintenant" && windowStart <= now { continue }
             results.append(buildWindow(
                 title: def.title,
                 start: windowStart,
@@ -112,6 +115,7 @@ enum LiveInterpreter {
                 personalAllergens: personalAllergens
             ))
         }
+        results.sort { $0.start < $1.start }
         return results
     }
 
