@@ -24,7 +24,29 @@ struct AirQualityResponse: Decodable {
         let mugwort_pollen: [Double?]?
         let olive_pollen: [Double?]?
         let ragweed_pollen: [Double?]?
+        let pm2_5: [Double?]?
+        let pm10: [Double?]?
+        let ozone: [Double?]?
+        let nitrogen_dioxide: [Double?]?
     }
+}
+
+// MARK: - Ambee
+
+struct AmbeeForecastResponse: Decodable {
+    let message: String?
+    let data: [AmbeeDataPoint]
+}
+
+struct AmbeeDataPoint: Decodable {
+    let time: TimeInterval
+    let Species: AmbeeSpecies?
+}
+
+struct AmbeeSpecies: Decodable {
+    let Grass: [String: Double]?
+    let Tree: [String: Double]?
+    let Weed: [String: Double]?
 }
 
 struct PollenSample: Identifiable, Hashable {

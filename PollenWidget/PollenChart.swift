@@ -8,37 +8,48 @@ struct PollenChart: View {
     let period: PollenPeriod
     var compact: Bool = false
 
+    private var isMulti: Bool { kind == .all || kind == .air }
+
+    private var multiKinds: [PollenKind] {
+        kind == .air ? PollenKind.airKinds : PollenKind.concreteKinds
+    }
+
+    private func multiSamples(for k: PollenKind) -> [PollenSample] {
+        allKindSamples[k] ?? []
+    }
+
     private var displayedMaxValue: Double {
-        if kind == .all {
-            return allKindSamples.values.flatMap { $0 }.map(\.value).max() ?? 0
+        if isMulti {
+            return multiKinds.flatMap { multiSamples(for: $0) }.map(\.value).max() ?? 0
         }
         return samples.map(\.value).max() ?? 0
     }
 
     private var maxY: Double {
-        max(displayedMaxValue * 1.30, 100)
+        let floor: Double = kind == .air ? 50 : 100
+        return max(displayedMaxValue * 1.30, floor)
     }
 
     private var xStart: Date {
-        if kind == .all {
-            return allKindSamples.values.flatMap { $0 }.min(by: { $0.date < $1.date })?.date ?? Date()
+        if isMulti {
+            return multiKinds.flatMap { multiSamples(for: $0) }.min(by: { $0.date < $1.date })?.date ?? Date()
         }
         return samples.first?.date ?? Date()
     }
 
     private var xEnd: Date {
-        if kind == .all {
-            return allKindSamples.values.flatMap { $0 }.max(by: { $0.date < $1.date })?.date ?? Date().addingTimeInterval(3600)
+        if isMulti {
+            return multiKinds.flatMap { multiSamples(for: $0) }.max(by: { $0.date < $1.date })?.date ?? Date().addingTimeInterval(3600)
         }
         return samples.last?.date ?? Date().addingTimeInterval(3600)
     }
 
     private var peakSample: (kind: PollenKind, sample: PollenSample)? {
-        if kind == .all {
+        if isMulti {
             var best: (PollenKind, PollenSample)?
-            for (k, list) in allKindSamples {
-                if let m = list.max(by: { $0.value < $1.value }),
-                   m.value > (best?.1.value ?? 0) {
+            for k in multiKinds {
+                guard let m = multiSamples(for: k).max(by: { $0.value < $1.value }) else { continue }
+                if m.value > (best?.1.value ?? 0) {
                     best = (k, m)
                 }
             }
@@ -90,28 +101,37 @@ struct PollenChart: View {
         max(0, min(1, v / maxY))
     }
 
+    private var peakLabelFormat: Date.FormatStyle {
+        if period == .week {
+            return .dateTime.weekday(.abbreviated).hour(.defaultDigits(amPM: .omitted))
+        }
+        return .dateTime.hour(.defaultDigits(amPM: .omitted)).minute()
+    }
+
     var body: some View {
         Chart {
-            // Subtle threshold reference (only at high/very-high)
-            if maxY > 50 {
-                RuleMark(y: .value("Seuil", 50))
-                    .foregroundStyle(.secondary.opacity(0.10))
-                    .lineStyle(StrokeStyle(lineWidth: 0.5, dash: [3, 4]))
-            }
-            if maxY > 100 {
-                RuleMark(y: .value("Seuil", 100))
-                    .foregroundStyle(.secondary.opacity(0.12))
-                    .lineStyle(StrokeStyle(lineWidth: 0.5, dash: [3, 4]))
+            // Subtle threshold reference (only for pollen modes — air mode has mixed units)
+            if kind != .air {
+                if maxY > 50 {
+                    RuleMark(y: .value("Seuil", 50))
+                        .foregroundStyle(.secondary.opacity(0.10))
+                        .lineStyle(StrokeStyle(lineWidth: 0.5, dash: [3, 4]))
+                }
+                if maxY > 100 {
+                    RuleMark(y: .value("Seuil", 100))
+                        .foregroundStyle(.secondary.opacity(0.12))
+                        .lineStyle(StrokeStyle(lineWidth: 0.5, dash: [3, 4]))
+                }
             }
 
-            if kind == .all {
-                ForEach(PollenKind.concreteKinds, id: \.self) { k in
+            if isMulti {
+                ForEach(multiKinds, id: \.self) { k in
                     if let list = allKindSamples[k] {
                         ForEach(list) { sample in
                             LineMark(
                                 x: .value("Date", sample.date),
                                 y: .value("Pollen", sample.value),
-                                series: .value("Pollen", k.label)
+                                series: .value("Série", k.label)
                             )
                             .foregroundStyle(k.color)
                             .lineStyle(StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
@@ -152,7 +172,7 @@ struct PollenChart: View {
             }
 
             // Now indicator + ghost pill (today only, single kind)
-            if period == .today, kind != .all, let n = nowSample {
+            if period == .today, !isMulti, let n = nowSample {
                 let nowRisk = PollenRisk.from(n.value)
                 RuleMark(x: .value("Maintenant", n.date))
                     .foregroundStyle(.primary.opacity(0.20))
@@ -184,8 +204,8 @@ struct PollenChart: View {
             }
 
             // Peak pill (the one big highlight)
-            if let peak = peakSample, peak.sample.value > 5 {
-                let peakColor: Color = kind == .all ? peak.kind.color : PollenRisk.from(peak.sample.value).color
+            if let peak = peakSample, peak.sample.value > 0 {
+                let peakColor: Color = isMulti ? peak.kind.color : PollenRisk.from(peak.sample.value).color
                 let pickedDifferentFromNow: Bool = {
                     guard let n = nowSample else { return true }
                     return abs(n.date.timeIntervalSince(peak.sample.date)) > 1800
@@ -201,14 +221,22 @@ struct PollenChart: View {
                     .symbolSize(80)
                     .foregroundStyle(peakColor)
                     .annotation(position: .top, alignment: .center, spacing: 4) {
-                        PeakPill(value: peak.sample.value, kind: kind == .all ? peak.kind : nil, color: peakColor)
+                        PeakPill(value: peak.sample.value, kind: isMulti ? peak.kind : nil, color: peakColor)
+                    }
+                    .annotation(position: .bottom, alignment: .center, spacing: 2) {
+                        Text(peak.sample.date, format: peakLabelFormat)
+                            .font(.system(size: compact ? 8 : 9, weight: .semibold, design: .rounded))
+                            .foregroundStyle(peakColor)
                     }
                 }
             }
         }
         .chartYScale(domain: 0...maxY)
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: period == .week ? 7 : 5)) { value in
+            let count: Int = period == .week ? 7 : (compact ? 6 : 9)
+            AxisMarks(values: .automatic(desiredCount: count)) { value in
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                    .foregroundStyle(.secondary.opacity(0.10))
                 AxisValueLabel(centered: false) {
                     if let date = value.as(Date.self) {
                         Group {

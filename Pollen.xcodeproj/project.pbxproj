@@ -67,6 +67,7 @@
 		E844288C58A64177F5A4CC82 /* PollenModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenModels.swift; sourceTree = "<group>"; };
 		FD45FD243789449AC45CC33A /* Pollen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pollen.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD61D0F44E9324F045EF2793 /* Pollen.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Pollen.entitlements; sourceTree = "<group>"; };
+		"TEMP_5C0C4A93-B37E-4084-ADB1-4AD343927057" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -117,6 +118,14 @@
 				6FE7B6DEE3047923DA737ACF /* PollenWidgetView.swift */,
 			);
 			path = PollenWidget;
+			sourceTree = "<group>";
+		};
+		"TEMP_EC1A69AF-7208-49E1-A709-0B2D045EAA55" /* pollen */ = {
+			isa = PBXGroup;
+			children = (
+				"TEMP_5C0C4A93-B37E-4084-ADB1-4AD343927057" /* Secrets.xcconfig */,
+			);
+			path = pollen;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -426,6 +435,7 @@
 		};
 		D0C61F2B70B94C45DF5C8226 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_5C0C4A93-B37E-4084-ADB1-4AD343927057" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = PollenWidget/PollenWidget.entitlements;
@@ -448,6 +458,7 @@
 		};
 		E283F3F93A123E893392A64B /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_5C0C4A93-B37E-4084-ADB1-4AD343927057" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = PollenWidget/PollenWidget.entitlements;

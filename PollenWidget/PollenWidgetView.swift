@@ -93,9 +93,10 @@ struct ModeSwitcher: View {
     var compact: Bool = false
 
     var body: some View {
-        HStack(spacing: compact ? 6 : 8) {
+        HStack(spacing: compact ? 4 : 6) {
             modeButton(target: .max, label: "Simple")
             modeButton(target: .all, label: "Détaillé")
+            modeButton(target: .air, label: "Air")
         }
     }
 
@@ -127,16 +128,31 @@ struct ModeSwitcher: View {
 // MARK: - Kind legend (shown in détaillé mode)
 
 struct KindLegend: View {
+    let kinds: [PollenKind]
+    var columns: Int = 7
+
+    init(kinds: [PollenKind] = PollenKind.concreteKinds, columns: Int = 7) {
+        self.kinds = kinds
+        self.columns = columns
+    }
+
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(PollenKind.concreteKinds, id: \.self) { kind in
-                HStack(spacing: 3) {
-                    Circle().fill(kind.color).frame(width: 6, height: 6)
+        let cols = Array(
+            repeating: GridItem(.flexible(minimum: 0), spacing: 6, alignment: .center),
+            count: columns
+        )
+        LazyVGrid(columns: cols, alignment: .center, spacing: 6) {
+            ForEach(kinds, id: \.self) { kind in
+                VStack(spacing: 2) {
+                    Circle()
+                        .fill(kind.color)
+                        .frame(width: 7, height: 7)
                     Text(kind.shortLabel)
-                        .font(.system(size: 9, weight: .medium))
+                        .font(.system(size: 8, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
-                .frame(maxWidth: .infinity)
             }
         }
     }
@@ -281,12 +297,12 @@ private struct MediumView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .invalidatableContent()
 
-            HStack(spacing: 8) {
+            VStack(spacing: 4) {
                 ModeSwitcher(current: entry.currentKind, compact: true)
-                    .frame(width: 150)
                 if entry.currentKind == .all {
                     KindLegend()
-                        .layoutPriority(1)
+                } else if entry.currentKind == .air {
+                    KindLegend(kinds: PollenKind.airKinds, columns: 4)
                 }
             }
         }
@@ -343,6 +359,8 @@ private struct LargeView: View {
 
             if entry.currentKind == .all {
                 KindLegend()
+            } else if entry.currentKind == .air {
+                KindLegend(kinds: PollenKind.airKinds, columns: 4)
             } else {
                 HStack(spacing: 0) {
                     ForEach(PollenRisk.allCases, id: \.self) { risk in

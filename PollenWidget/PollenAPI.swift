@@ -53,12 +53,88 @@ struct PollenAPI {
         return response.results ?? []
     }
 
+    // MARK: - Ambee
+
+    private final class BundleToken {}
+
+    static var ambeeAPIKey: String? {
+        let raw = Bundle(for: BundleToken.self).object(forInfoDictionaryKey: "AmbeeAPIKey") as? String
+        guard let value = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else {
+            return nil
+        }
+        return value
+    }
+
+    static func ambeeForecast(latitude: Double, longitude: Double) async throws -> AmbeeForecastResponse? {
+        guard let apiKey = ambeeAPIKey else { return nil }
+
+        var components = URLComponents(string: "https://api.ambeedata.com/forecast/pollen/by-lat-lng")
+        components?.queryItems = [
+            URLQueryItem(name: "lat", value: String(latitude)),
+            URLQueryItem(name: "lng", value: String(longitude)),
+        ]
+        guard let url = components?.url else { return nil }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 8
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            return nil
+        }
+        return try? JSONDecoder().decode(AmbeeForecastResponse.self, from: data)
+    }
+
+    /// Map Ambee species names → PollenKind. Returns samples per kind.
+    static func samplesByKindFromAmbee(_ response: AmbeeForecastResponse, period: PollenPeriod, referenceDate: Date = Date()) -> [PollenKind: [PollenSample]] {
+        let mapping: [(String, PollenKind, KeyPath<AmbeeSpecies, [String: Double]?>)] = [
+            ("Alder", .alder, \.Tree),
+            ("Birch", .birch, \.Tree),
+            ("Cypress", .cypress, \.Tree),
+            ("Cypress / Pine", .cypress, \.Tree),
+            ("Hazel", .hazel, \.Tree),
+            ("Oak", .oak, \.Tree),
+            ("Pine", .pine, \.Tree),
+            ("Plane", .plane, \.Tree),
+            ("Ash", .ash, \.Tree),
+            ("Olive", .olive, \.Tree),
+            ("Mugwort", .mugwort, \.Weed),
+            ("Nettle", .nettle, \.Weed),
+            ("Pellitory", .nettle, \.Weed),
+            ("Ragweed", .ragweed, \.Weed),
+            ("Plantain", .plantain, \.Weed),
+            ("Grass / Poaceae", .grass, \.Grass),
+            ("Grass", .grass, \.Grass),
+            ("Poaceae", .grass, \.Grass),
+        ]
+
+        var raw: [PollenKind: [PollenSample]] = [:]
+        for entry in response.data {
+            let date = Date(timeIntervalSince1970: entry.time)
+            guard let species = entry.Species else { continue }
+            for (label, kind, keyPath) in mapping {
+                if let dict = species[keyPath: keyPath], let value = dict[label] {
+                    raw[kind, default: []].append(PollenSample(date: date, value: max(0, value)))
+                }
+            }
+        }
+
+        var reduced: [PollenKind: [PollenSample]] = [:]
+        for (kind, samples) in raw {
+            reduced[kind] = reduce(samples: samples.sorted { $0.date < $1.date }, period: period, referenceDate: referenceDate)
+        }
+        return reduced
+    }
+
     static func airQuality(latitude: Double, longitude: Double, days: Int) async throws -> AirQualityResponse {
         var components = URLComponents(string: "https://air-quality-api.open-meteo.com/v1/air-quality")
         components?.queryItems = [
             URLQueryItem(name: "latitude", value: String(latitude)),
             URLQueryItem(name: "longitude", value: String(longitude)),
-            URLQueryItem(name: "hourly", value: "alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen"),
+            URLQueryItem(name: "hourly", value: "alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen,pm2_5,pm10,ozone,nitrogen_dioxide"),
             URLQueryItem(name: "forecast_days", value: String(days)),
             URLQueryItem(name: "timezone", value: "auto"),
         ]
@@ -71,6 +147,9 @@ struct PollenAPI {
     static func samplesByKind(for response: AirQualityResponse, period: PollenPeriod, referenceDate: Date = Date()) -> [PollenKind: [PollenSample]] {
         var result: [PollenKind: [PollenSample]] = [:]
         for kind in PollenKind.concreteKinds {
+            result[kind] = samples(for: response, kind: kind, period: period, referenceDate: referenceDate)
+        }
+        for kind in PollenKind.airKinds {
             result[kind] = samples(for: response, kind: kind, period: period, referenceDate: referenceDate)
         }
         return result
@@ -113,6 +192,12 @@ struct PollenAPI {
             case .mugwort: return response.hourly.mugwort_pollen?[safe: i] ?? nil
             case .olive: return response.hourly.olive_pollen?[safe: i] ?? nil
             case .ragweed: return response.hourly.ragweed_pollen?[safe: i] ?? nil
+            case .cypress, .plane, .hazel, .plantain, .nettle, .oak, .ash, .pine, .air:
+                return nil // Espèces fournies par Ambee uniquement (ou mode air)
+            case .pm25: return response.hourly.pm2_5?[safe: i] ?? nil
+            case .pm10: return response.hourly.pm10?[safe: i] ?? nil
+            case .ozone: return response.hourly.ozone?[safe: i] ?? nil
+            case .no2: return response.hourly.nitrogen_dioxide?[safe: i] ?? nil
             }
         }
 

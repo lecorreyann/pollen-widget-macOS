@@ -39,12 +39,25 @@ enum PollenPeriod: String, AppEnum {
 enum PollenKind: String, AppEnum, CaseIterable {
     case all
     case max
+    case air
     case alder
     case birch
     case grass
     case mugwort
     case olive
     case ragweed
+    case cypress
+    case plane
+    case hazel
+    case plantain
+    case nettle
+    case oak
+    case ash
+    case pine
+    case pm25
+    case pm10
+    case ozone
+    case no2
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation {
         TypeDisplayRepresentation(name: "Type de pollen")
@@ -54,12 +67,25 @@ enum PollenKind: String, AppEnum, CaseIterable {
         [
             .all: DisplayRepresentation(title: "Tous (superposés)"),
             .max: DisplayRepresentation(title: "Maximum global"),
+            .air: DisplayRepresentation(title: "Qualité de l'air"),
             .alder: DisplayRepresentation(title: "Aulne"),
             .birch: DisplayRepresentation(title: "Bouleau"),
             .grass: DisplayRepresentation(title: "Graminées"),
             .mugwort: DisplayRepresentation(title: "Armoise"),
             .olive: DisplayRepresentation(title: "Olivier"),
             .ragweed: DisplayRepresentation(title: "Ambroisie"),
+            .cypress: DisplayRepresentation(title: "Cyprès"),
+            .plane: DisplayRepresentation(title: "Platane"),
+            .hazel: DisplayRepresentation(title: "Noisetier"),
+            .plantain: DisplayRepresentation(title: "Plantain"),
+            .nettle: DisplayRepresentation(title: "Pariétaire / Ortie"),
+            .oak: DisplayRepresentation(title: "Chêne"),
+            .ash: DisplayRepresentation(title: "Frêne"),
+            .pine: DisplayRepresentation(title: "Pin"),
+            .pm25: DisplayRepresentation(title: "PM2.5"),
+            .pm10: DisplayRepresentation(title: "PM10"),
+            .ozone: DisplayRepresentation(title: "Ozone"),
+            .no2: DisplayRepresentation(title: "Dioxyde d'azote"),
         ]
     }
 
@@ -67,12 +93,25 @@ enum PollenKind: String, AppEnum, CaseIterable {
         switch self {
         case .all: "Tous"
         case .max: "Max global"
+        case .air: "Qualité de l'air"
         case .alder: "Aulne"
         case .birch: "Bouleau"
         case .grass: "Graminées"
         case .mugwort: "Armoise"
         case .olive: "Olivier"
         case .ragweed: "Ambroisie"
+        case .cypress: "Cyprès"
+        case .plane: "Platane"
+        case .hazel: "Noisetier"
+        case .plantain: "Plantain"
+        case .nettle: "Pariétaire"
+        case .oak: "Chêne"
+        case .ash: "Frêne"
+        case .pine: "Pin"
+        case .pm25: "PM2.5"
+        case .pm10: "PM10"
+        case .ozone: "Ozone"
+        case .no2: "NO₂"
         }
     }
 
@@ -80,12 +119,25 @@ enum PollenKind: String, AppEnum, CaseIterable {
         switch self {
         case .all: "Tous"
         case .max: "Max"
+        case .air: "Air"
         case .alder: "Aul"
         case .birch: "Bou"
         case .grass: "Gra"
         case .mugwort: "Arm"
         case .olive: "Oli"
         case .ragweed: "Amb"
+        case .cypress: "Cyp"
+        case .plane: "Pla"
+        case .hazel: "Noi"
+        case .plantain: "Pln"
+        case .nettle: "Par"
+        case .oak: "Chê"
+        case .ash: "Frê"
+        case .pine: "Pin"
+        case .pm25: "PM2.5"
+        case .pm10: "PM10"
+        case .ozone: "O₃"
+        case .no2: "NO₂"
         }
     }
 
@@ -93,17 +145,53 @@ enum PollenKind: String, AppEnum, CaseIterable {
         switch self {
         case .all: Color(red: 0.40, green: 0.40, blue: 0.45)
         case .max: Color(red: 0.40, green: 0.40, blue: 0.45)
+        case .air: Color(red: 0.40, green: 0.40, blue: 0.45)
         case .alder: Color(red: 0.55, green: 0.42, blue: 0.30)
         case .birch: Color(red: 0.40, green: 0.65, blue: 0.85)
         case .grass: Color(red: 0.45, green: 0.75, blue: 0.45)
         case .mugwort: Color(red: 0.65, green: 0.50, blue: 0.85)
         case .olive: Color(red: 0.55, green: 0.65, blue: 0.40)
         case .ragweed: Color(red: 0.92, green: 0.55, blue: 0.20)
+        case .cypress: Color(red: 0.30, green: 0.55, blue: 0.55)
+        case .plane: Color(red: 0.70, green: 0.55, blue: 0.35)
+        case .hazel: Color(red: 0.78, green: 0.55, blue: 0.30)
+        case .plantain: Color(red: 0.55, green: 0.70, blue: 0.55)
+        case .nettle: Color(red: 0.50, green: 0.60, blue: 0.30)
+        case .oak: Color(red: 0.45, green: 0.35, blue: 0.20)
+        case .ash: Color(red: 0.55, green: 0.50, blue: 0.45)
+        case .pine: Color(red: 0.30, green: 0.45, blue: 0.30)
+        case .pm25: Color(red: 0.85, green: 0.30, blue: 0.30)
+        case .pm10: Color(red: 0.95, green: 0.50, blue: 0.20)
+        case .ozone: Color(red: 0.55, green: 0.30, blue: 0.80)
+        case .no2: Color(red: 0.50, green: 0.35, blue: 0.20)
         }
     }
 
-    static let concreteKinds: [PollenKind] = [.alder, .birch, .grass, .mugwort, .olive, .ragweed]
-    static let switcherKinds: [PollenKind] = [.all, .max, .alder, .birch, .grass, .mugwort, .olive, .ragweed]
+    /// Risk thresholds for this kind (low / moderate / high boundaries).
+    /// Pollens use grains/m³ (default), pollutants use µg/m³ from EU AQI guidelines.
+    var riskThresholds: (low: Double, moderate: Double, high: Double) {
+        switch self {
+        case .pm25: return (10, 25, 50)
+        case .pm10: return (20, 50, 100)
+        case .ozone: return (60, 100, 180)
+        case .no2: return (40, 90, 120)
+        default: return (20, 50, 100)
+        }
+    }
+
+    var isPollutant: Bool {
+        switch self {
+        case .pm25, .pm10, .ozone, .no2: return true
+        default: return false
+        }
+    }
+
+    static let concreteKinds: [PollenKind] = [
+        .alder, .birch, .grass, .mugwort, .olive, .ragweed,
+        .cypress, .plane, .hazel, .plantain, .nettle, .oak, .ash, .pine,
+    ]
+    static let airKinds: [PollenKind] = [.pm25, .pm10, .ozone, .no2]
+    static let switcherKinds: [PollenKind] = [.all, .max, .air] + concreteKinds + airKinds
 }
 
 // MARK: - City Entity

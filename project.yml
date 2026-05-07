@@ -45,6 +45,9 @@ targets:
     platform: macOS
     sources:
       - path: PollenWidget
+    configFiles:
+      Debug: Secrets.xcconfig
+      Release: Secrets.xcconfig
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.deleev.pollen.widget

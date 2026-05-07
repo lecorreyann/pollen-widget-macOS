@@ -31,3 +31,6 @@ Carthage/Build/
 .DS_Store
 *.swp
 *.swo
+
+# Secrets
+Secrets.xcconfig

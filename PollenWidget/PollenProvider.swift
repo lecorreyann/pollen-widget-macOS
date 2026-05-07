@@ -54,11 +54,17 @@ struct PollenProvider: AppIntentTimelineProvider {
         }
 
         do {
-            let response = try await PollenAPI.airQuality(
+            async let openMeteoTask = PollenAPI.airQuality(
                 latitude: city.latitude,
                 longitude: city.longitude,
                 days: days
             )
+            async let ambeeTask = PollenAPI.ambeeForecast(
+                latitude: city.latitude,
+                longitude: city.longitude
+            )
+            let response = try await openMeteoTask
+            let ambee = (try? await ambeeTask) ?? nil
 
             // Build display dates: hourly snapshots over the next 24h, plus a forced one
             // just past midnight so the day boundary always triggers a new entry.
@@ -84,7 +90,8 @@ struct PollenProvider: AppIntentTimelineProvider {
                     period: period,
                     kind: kind,
                     city: city,
-                    response: response
+                    response: response,
+                    ambee: ambee
                 )
             }
 
@@ -117,8 +124,11 @@ struct PollenProvider: AppIntentTimelineProvider {
             case .tomorrow: days = 3
             case .week: days = 7
             }
-            let response = try await PollenAPI.airQuality(latitude: city.latitude, longitude: city.longitude, days: days)
-            return makeEntry(at: Date(), configuration: configuration, period: period, kind: kind, city: city, response: response)
+            async let openMeteoTask = PollenAPI.airQuality(latitude: city.latitude, longitude: city.longitude, days: days)
+            async let ambeeTask = PollenAPI.ambeeForecast(latitude: city.latitude, longitude: city.longitude)
+            let response = try await openMeteoTask
+            let ambee = (try? await ambeeTask) ?? nil
+            return makeEntry(at: Date(), configuration: configuration, period: period, kind: kind, city: city, response: response, ambee: ambee)
         } catch {
             return PollenEntry(
                 date: Date(),
@@ -134,15 +144,29 @@ struct PollenProvider: AppIntentTimelineProvider {
         }
     }
 
+    private static let openMeteoCovered: Set<PollenKind> = [.alder, .birch, .grass, .mugwort, .olive, .ragweed]
+
     private func makeEntry(
         at displayDate: Date,
         configuration: PollenConfigurationIntent,
         period: PollenPeriod,
         kind: PollenKind,
         city: CityEntity,
-        response: AirQualityResponse
+        response: AirQualityResponse,
+        ambee: AmbeeForecastResponse?
     ) -> PollenEntry {
-        let allKind = PollenAPI.samplesByKind(for: response, period: period, referenceDate: displayDate)
+        var allKind = PollenAPI.samplesByKind(for: response, period: period, referenceDate: displayDate)
+        if let ambee {
+            let ambeeKind = PollenAPI.samplesByKindFromAmbee(ambee, period: period, referenceDate: displayDate)
+            for (k, samples) in ambeeKind where !samples.isEmpty {
+                // Open-Meteo couvre 7 jours, Ambee seulement ~5 jours.
+                // Pour les espèces partagées, on garde Open-Meteo pour ne pas tronquer la vue 7 j.
+                // Pour les espèces nouvelles (cyprès, plane, etc.), on prend Ambee.
+                if !Self.openMeteoCovered.contains(k) {
+                    allKind[k] = samples
+                }
+            }
+        }
         let displayed: [PollenSample]
         if kind == .max || kind == .all {
             displayed = PollenAPI.maxSamples(from: allKind)
@@ -174,11 +198,46 @@ extension PollenEntry {
         switch currentKind {
         case .all:
             return allHeadline()
+        case .air:
+            return airHeadline()
         case .max:
             return singleHeadline(samples: samples, kindLabel: nil)
         default:
             return singleHeadline(samples: samples, kindLabel: currentKind.label)
         }
+    }
+
+    private func airHeadline() -> Headline? {
+        // Find the worst pollutant (by risk level relative to its thresholds).
+        let now = Date()
+        let order: [PollenRisk] = [.low, .moderate, .high, .veryHigh]
+        var worst: (kind: PollenKind, value: Double, riskIdx: Int)?
+        for kind in PollenKind.airKinds {
+            guard let list = allKindSamples[kind], !list.isEmpty else { continue }
+            let chosen: PollenSample?
+            switch currentPeriod {
+            case .today:
+                chosen = list.min(by: {
+                    abs($0.date.timeIntervalSince(now)) < abs($1.date.timeIntervalSince(now))
+                })
+            case .tomorrow, .week:
+                chosen = list.max(by: { $0.value < $1.value })
+            }
+            guard let sample = chosen else { continue }
+            let risk = PollenRisk.from(sample.value, kind: kind)
+            let idx = order.firstIndex(of: risk) ?? 0
+            if worst == nil || idx > worst!.riskIdx {
+                worst = (kind, sample.value, idx)
+            }
+        }
+        guard let worst else { return nil }
+        let prefix: String
+        switch currentPeriod {
+        case .today: prefix = "Maintenant"
+        case .tomorrow: prefix = "Demain"
+        case .week: prefix = "Sur 7 jours"
+        }
+        return Headline(label: "\(prefix) · \(worst.kind.label)", value: worst.value, kind: worst.kind)
     }
 
     private func singleHeadline(samples: [PollenSample], kindLabel: String?) -> Headline? {

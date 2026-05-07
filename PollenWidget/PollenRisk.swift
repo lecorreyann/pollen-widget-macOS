@@ -15,6 +15,16 @@ enum PollenRisk: CaseIterable {
         }
     }
 
+    static func from(_ value: Double, kind: PollenKind) -> PollenRisk {
+        let t = kind.riskThresholds
+        switch value {
+        case ..<t.low: return .low
+        case ..<t.moderate: return .moderate
+        case ..<t.high: return .high
+        default: return .veryHigh
+        }
+    }
+
     var color: Color {
         switch self {
         case .low: Color(red: 0.30, green: 0.78, blue: 0.45)
