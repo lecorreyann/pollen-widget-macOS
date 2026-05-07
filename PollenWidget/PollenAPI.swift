@@ -215,10 +215,28 @@ struct PollenAPI {
 
         switch period {
         case .today:
-            return raw.filter { calendar.isDate($0.date, inSameDayAs: now) }
+            let mainDay = raw.filter { calendar.isDate($0.date, inSameDayAs: now) }
+            // Inclure le 00:00 du lendemain comme point frontière pour que la courbe
+            // couvre toute la journée jusqu'à 24h (= 00h du jour suivant).
+            let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))
+            if let target = startOfTomorrow,
+               let boundary = raw.first(where: {
+                   calendar.isDate($0.date, equalTo: target, toGranularity: .hour) && $0.date >= target
+               }) {
+                return mainDay + [boundary]
+            }
+            return mainDay
         case .tomorrow:
             guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) else { return [] }
-            return raw.filter { calendar.isDate($0.date, inSameDayAs: tomorrow) }
+            let mainDay = raw.filter { calendar.isDate($0.date, inSameDayAs: tomorrow) }
+            let startOfDayAfter = calendar.date(byAdding: .day, value: 2, to: calendar.startOfDay(for: now))
+            if let target = startOfDayAfter,
+               let boundary = raw.first(where: {
+                   calendar.isDate($0.date, equalTo: target, toGranularity: .hour) && $0.date >= target
+               }) {
+                return mainDay + [boundary]
+            }
+            return mainDay
         case .week:
             let startOfToday = calendar.startOfDay(for: now)
             let weekRange = raw.filter { $0.date >= startOfToday }

@@ -146,6 +146,20 @@ struct InteractiveChartView: View {
                 }
                 .padding(.horizontal, 4)
             }
+
+            // Disponibilité des données
+            if mode != .air && hasExtendedSpeciesData && period == .week {
+                HStack(spacing: 6) {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.tertiary)
+                    Text("Cyprès, Chêne, Pin, Platane, Pariétaire, Noisetier, Frêne, Plantain : prévisions limitées à 2 jours (source Ambee, plan gratuit). Les autres espèces couvrent les 7 jours.")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.tertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, 4)
+            }
         }
         .onAppear { recomputeByKind() }
         .onChange(of: period) { _, _ in recomputeByKind() }
@@ -241,16 +255,25 @@ struct InteractiveChartView: View {
     }
 
     private func nearestSamples(at date: Date) -> [(kind: PollenKind, value: Double)] {
+        // Seuil de proximité : si l'échantillon le plus proche est trop loin,
+        // on n'affiche pas (sinon on ment, on renvoie la dernière donnée connue).
+        let threshold: TimeInterval = period == .week ? 12 * 3600 : 1.5 * 3600
         var results: [(kind: PollenKind, value: Double)] = []
         for kind in displayedKinds {
             guard let list = byKind[kind], !list.isEmpty else { continue }
-            if let nearest = list.min(by: {
+            guard let nearest = list.min(by: {
                 abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date))
-            }) {
+            }) else { continue }
+            if abs(nearest.date.timeIntervalSince(date)) <= threshold {
                 results.append((kind, nearest.value))
             }
         }
         return results.sorted { $0.value > $1.value }
+    }
+
+    private var hasExtendedSpeciesData: Bool {
+        let extended: Set<PollenKind> = [.cypress, .plane, .hazel, .plantain, .nettle, .oak, .ash, .pine]
+        return displayedKinds.contains(where: { extended.contains($0) })
     }
 }
 
@@ -339,21 +362,30 @@ private struct TooltipCard: View {
             Text(dateString.capitalized)
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .foregroundStyle(.primary)
-            ForEach(samples.prefix(8), id: \.kind) { entry in
-                HStack(spacing: 5) {
-                    Circle().fill(entry.kind.color).frame(width: 6, height: 6)
-                    Text(entry.kind.label)
-                        .font(.system(size: 10, weight: .medium, design: .rounded))
-                        .foregroundStyle(personalAllergens.contains(entry.kind) ? Color.primary : Color.primary.opacity(0.8))
-                    if personalAllergens.contains(entry.kind) {
-                        Image(systemName: "star.fill")
-                            .font(.system(size: 6))
-                            .foregroundStyle(.yellow)
+            if samples.isEmpty {
+                Text("Aucune donnée disponible")
+                    .font(.system(size: 10, weight: .regular, design: .rounded))
+                    .foregroundStyle(.secondary)
+                Text("Prévisions Ambee limitées à 2 jours en plan gratuit")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+            } else {
+                ForEach(samples.prefix(8), id: \.kind) { entry in
+                    HStack(spacing: 5) {
+                        Circle().fill(entry.kind.color).frame(width: 6, height: 6)
+                        Text(entry.kind.label)
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .foregroundStyle(personalAllergens.contains(entry.kind) ? Color.primary : Color.primary.opacity(0.8))
+                        if personalAllergens.contains(entry.kind) {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 6))
+                                .foregroundStyle(.yellow)
+                        }
+                        Spacer(minLength: 8)
+                        Text("\(Int(entry.value.rounded()))")
+                            .font(.system(size: 10, weight: .semibold, design: .rounded))
+                            .foregroundStyle(entry.kind.color)
                     }
-                    Spacer(minLength: 8)
-                    Text("\(Int(entry.value.rounded()))")
-                        .font(.system(size: 10, weight: .semibold, design: .rounded))
-                        .foregroundStyle(entry.kind.color)
                 }
             }
         }
