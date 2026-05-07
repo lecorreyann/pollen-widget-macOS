@@ -372,6 +372,8 @@ enum SelectedPeriodStore {
               let value = PollenPeriod(rawValue: raw) else {
             return fallback
         }
+        // Migration : le mode 7 jours a été retiré (données Ambee limitées à 2 j).
+        if value == .week { return .today }
         return value
     }
 

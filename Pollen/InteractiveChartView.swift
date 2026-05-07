@@ -284,7 +284,7 @@ private struct PeriodSelector: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            ForEach([PollenPeriod.today, .tomorrow, .week], id: \.self) { p in
+            ForEach([PollenPeriod.today, .tomorrow], id: \.self) { p in
                 Button {
                     period = p
                 } label: {

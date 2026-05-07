@@ -55,7 +55,7 @@ struct PeriodSwitcher: View {
 
     var body: some View {
         HStack(spacing: compact ? 4 : 6) {
-            ForEach([PollenPeriod.today, .tomorrow, .week], id: \.self) { period in
+            ForEach([PollenPeriod.today, .tomorrow], id: \.self) { period in
                 periodButton(period)
             }
         }
