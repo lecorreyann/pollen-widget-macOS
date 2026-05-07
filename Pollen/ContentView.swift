@@ -5,8 +5,62 @@ struct ContentView: View {
     @StateObject private var journal = SymptomJournal()
 
     var body: some View {
+        ZStack {
+            BackgroundGradient()
+            GeometryReader { geo in
+                if geo.size.width >= 920 {
+                    twoColumnLayout
+                } else {
+                    singleColumnLayout
+                }
+            }
+        }
+        .frame(minWidth: 600, idealWidth: 1180, minHeight: 640, idealHeight: 900)
+        .task {
+            await loader.load()
+        }
+    }
+
+    private var twoColumnLayout: some View {
+        VStack(spacing: 0) {
+            Header()
+                .padding(.horizontal, 24)
+                .padding(.vertical, 18)
+
+            Divider()
+
+            HStack(spacing: 0) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 22) {
+                        LiveSection(loader: loader, journal: journal)
+                        InteractiveChartView(loader: loader, journal: journal)
+                        JournalSection(journal: journal, loader: loader)
+                    }
+                    .padding(24)
+                }
+                .layoutPriority(1)
+
+                Divider()
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 22) {
+                        PollenSection()
+                        AirSection()
+                        EyesSection()
+                        ReliefSection()
+                        Footer()
+                    }
+                    .padding(24)
+                }
+                .frame(minWidth: 340, idealWidth: 380, maxWidth: 420)
+                .background(Color.primary.opacity(0.025))
+            }
+        }
+    }
+
+    private var singleColumnLayout: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 22) {
                 Header()
                 LiveSection(loader: loader, journal: journal)
                 InteractiveChartView(loader: loader, journal: journal)
@@ -17,14 +71,9 @@ struct ContentView: View {
                 ReliefSection()
                 Footer()
             }
-            .padding(28)
+            .padding(24)
             .frame(maxWidth: 820)
             .frame(maxWidth: .infinity)
-        }
-        .background(BackgroundGradient())
-        .frame(minWidth: 580, idealWidth: 800, minHeight: 600, idealHeight: 880)
-        .task {
-            await loader.load()
         }
     }
 }
@@ -672,7 +721,7 @@ private struct Footer: View {
 
 // MARK: - Background
 
-private struct BackgroundGradient: View {
+struct BackgroundGradient: View {
     var body: some View {
         ZStack {
             Color(nsColor: .windowBackgroundColor)
