@@ -54,10 +54,12 @@ enum LiveInterpreter {
     }
 
     /// Construit une série de fenêtres pour aujourd'hui et demain, avec interprétation.
+    /// `personalAllergens` (issus du journal) sont mis en avant dans les messages.
     static func windows(
         from response: AirQualityResponse,
         ambee: AmbeeForecastResponse?,
         cityName: String,
+        personalAllergens: Set<PollenKind> = [],
         now: Date = Date()
     ) -> [LiveWindow] {
         let calendar = Calendar.current
@@ -98,7 +100,8 @@ enum LiveInterpreter {
                 title: def.title,
                 start: windowStart,
                 end: windowEnd,
-                byKind: byKind
+                byKind: byKind,
+                personalAllergens: personalAllergens
             ))
         }
         return results
@@ -108,7 +111,8 @@ enum LiveInterpreter {
         title: String,
         start: Date,
         end: Date,
-        byKind: [PollenKind: [PollenSample]]
+        byKind: [PollenKind: [PollenSample]],
+        personalAllergens: Set<PollenKind>
     ) -> LiveWindow {
         // Find max value for each kind in the window
         var maxByKind: [PollenKind: Double] = [:]
@@ -119,14 +123,26 @@ enum LiveInterpreter {
             }
         }
 
-        // Find the dominant pollen
-        let dominantPollen: (kind: PollenKind, value: Double)? = {
+        // Find the dominant pollen — priorité aux allergènes personnels si en jeu
+        let personalPollen: (kind: PollenKind, value: Double)? = {
+            var best: (PollenKind, Double)?
+            for kind in personalAllergens where !kind.isPollutant {
+                guard let v = maxByKind[kind], v > (best?.1 ?? 0) else { continue }
+                best = (kind, v)
+            }
+            return best
+        }()
+        let dominantPollen: (kind: PollenKind, value: Double, isPersonal: Bool)? = {
+            // Si un allergène perso atteint au moins 30 grains/m³ (modéré+), on le met en avant
+            if let p = personalPollen, p.value >= 30 {
+                return (p.kind, p.value, true)
+            }
             var best: (PollenKind, Double)?
             for kind in PollenKind.concreteKinds {
                 guard let v = maxByKind[kind], v > (best?.1 ?? 0) else { continue }
                 best = (kind, v)
             }
-            return best
+            return best.map { ($0.0, $0.1, personalAllergens.contains($0.0)) }
         }()
 
         // Find the worst pollutant by its own thresholds
@@ -144,16 +160,21 @@ enum LiveInterpreter {
             return best.map { ($0.0, $0.1, $0.2) }
         }()
 
-        // Overall risk = max(pollen risk, pollutant risk)
+        // Overall risk = max(pollen risk, pollutant risk).
+        // Si l'allergène perso est en jeu et qu'il dépasse 30, on s'aligne au moins sur modéré.
         let pollenRisk: PollenRisk = dominantPollen.map { PollenRisk.from($0.value) } ?? .low
         let pollutantRisk: PollenRisk = worstPollutant?.risk ?? .low
-        let overall = max(pollenRisk, pollutantRisk)
+        var overall = max(pollenRisk, pollutantRisk)
+        if let d = dominantPollen, d.isPersonal, d.value >= 30, overall == .low {
+            overall = .moderate
+        }
 
         let timeRange = formatRange(start: start, end: end)
         let summary = composeSummary(
             pollen: dominantPollen,
             pollutant: worstPollutant,
-            overall: overall
+            overall: overall,
+            hasPersonalAllergens: !personalAllergens.isEmpty
         )
         let highlights = composeHighlights(
             pollen: dominantPollen,
@@ -185,15 +206,30 @@ enum LiveInterpreter {
     }
 
     private static func composeSummary(
-        pollen: (kind: PollenKind, value: Double)?,
+        pollen: (kind: PollenKind, value: Double, isPersonal: Bool)?,
         pollutant: (kind: PollenKind, value: Double, risk: PollenRisk)?,
-        overall: PollenRisk
+        overall: PollenRisk,
+        hasPersonalAllergens: Bool
     ) -> String {
+        let personalTag = "(ton allergène)"
+
+        func describePollen() -> String? {
+            guard let pollen else { return nil }
+            let label = pollen.isPersonal ? "\(pollen.kind.label) \(personalTag)" : pollen.kind.label
+            return "\(label) à \(Int(pollen.value))"
+        }
+
         switch overall {
         case .low:
+            if hasPersonalAllergens {
+                return "Ton allergène principal est calme. Aucun symptôme attendu."
+            }
             return "Tout est sous contrôle. Aucun symptôme attendu."
         case .moderate:
             if let pollen, pollen.value >= 20 {
+                if pollen.isPersonal {
+                    return "\(describePollen() ?? "") (modéré). Tu vas peut-être sentir : nez qui chatouille, un éternuement de temps en temps. Surveille."
+                }
                 return "\(pollen.kind.label) à \(Int(pollen.value)) (modéré). Si tu es sensible : nez qui chatouille, un éternuement de temps en temps."
             }
             if let p = pollutant, p.value >= p.kind.riskThresholds.low {
@@ -203,36 +239,39 @@ enum LiveInterpreter {
         case .high:
             var parts: [String] = []
             if let pollen, pollen.value >= 50 {
-                parts.append("\(pollen.kind.label) à \(Int(pollen.value)) (élevé)")
+                parts.append(describePollen() ?? "")
             }
             if let p = pollutant, p.risk == .high || p.risk == .veryHigh {
                 parts.append("\(p.kind.label) à \(Int(p.value))")
             }
             let factors = parts.isEmpty ? "Niveau élevé" : parts.joined(separator: ", ")
-            return "\(factors). Attendez-vous à : nez qui coule, yeux qui piquent, éternuements en série, gorge qui gratte. Pense à ton collyre."
+            let prefix = (pollen?.isPersonal ?? false) ? "Forte exposition. " : ""
+            return "\(prefix)\(factors). Attendez-vous à : nez qui coule, yeux qui piquent, éternuements en série, gorge qui gratte. Pense à ton collyre."
         case .veryHigh:
             var parts: [String] = []
             if let pollen, pollen.value >= 100 {
-                parts.append("\(pollen.kind.label) à \(Int(pollen.value)) (très élevé)")
+                parts.append(describePollen() ?? "")
             }
             if let p = pollutant, p.risk == .veryHigh {
                 parts.append("\(p.kind.label) à \(Int(p.value))")
             }
             let factors = parts.isEmpty ? "Niveau très élevé" : parts.joined(separator: " + ")
-            return "\(factors). Yeux rouges et larmoyants, nez bouché, fatigue, possibles maux de tête. Reste à l'intérieur si possible, fenêtres fermées. Antihistaminique avant exposition."
+            let prefix = (pollen?.isPersonal ?? false) ? "Pic critique. " : ""
+            return "\(prefix)\(factors). Yeux rouges et larmoyants, nez bouché, fatigue, possibles maux de tête. Reste à l'intérieur si possible, fenêtres fermées. Antihistaminique avant exposition."
         }
     }
 
     private static func composeHighlights(
-        pollen: (kind: PollenKind, value: Double)?,
+        pollen: (kind: PollenKind, value: Double, isPersonal: Bool)?,
         pollutant: (kind: PollenKind, value: Double, risk: PollenRisk)?
     ) -> [LiveWindow.Highlight] {
         var hl: [LiveWindow.Highlight] = []
         if let pollen, pollen.value > 0 {
             let risk = PollenRisk.from(pollen.value)
+            let label = pollen.isPersonal ? "★ \(pollen.kind.label)" : pollen.kind.label
             hl.append(LiveWindow.Highlight(
                 icon: "leaf.fill",
-                label: pollen.kind.label,
+                label: label,
                 value: "\(Int(pollen.value))",
                 color: risk.color
             ))

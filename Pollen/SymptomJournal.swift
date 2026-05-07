@@ -124,6 +124,27 @@ final class SymptomJournal: ObservableObject {
         save()
     }
 
+    /// Allergènes identifiés par croisement journal × données.
+    /// Critère : ≥ 50 % des logs avec un symptôme allergique typique avaient ce
+    /// pollen/polluant en niveau « élevé » ou plus, et au moins 3 logs au total.
+    var personalAllergens: [(kind: PollenKind, percentage: Double)] {
+        guard logs.count >= 3 else { return [] }
+        let allergyRelevant: [Symptom] = [
+            .eyesItchy, .eyesRed, .runnyNose, .stuffyNose,
+            .sneezing, .soreThroat, .skinItchy,
+        ]
+        var bestPctByKind: [PollenKind: Double] = [:]
+        for symptom in allergyRelevant {
+            let candidates = SymptomAnalyser.candidates(for: symptom, in: logs)
+            for c in candidates where c.percentage >= 50 && c.totalLogs >= 3 {
+                bestPctByKind[c.kind] = max(bestPctByKind[c.kind] ?? 0, c.percentage)
+            }
+        }
+        return bestPctByKind
+            .map { (kind: $0.key, percentage: $0.value) }
+            .sorted { $0.percentage > $1.percentage }
+    }
+
     private func load() {
         guard let data = UserDefaults.standard.data(forKey: key) else { return }
         let decoder = JSONDecoder()

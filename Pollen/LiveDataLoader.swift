@@ -6,10 +6,13 @@ final class LiveDataLoader: ObservableObject {
     @Published var cityQuery: String = "Valencia, ES"
     @Published var resolvedCityName: String = ""
     @Published var resolvedCountry: String = ""
-    @Published var windows: [LiveWindow] = []
+    @Published var response: AirQualityResponse?
+    @Published var ambee: AmbeeForecastResponse?
     @Published var currentSnapshot: DataSnapshot?
     @Published var loading: Bool = false
     @Published var errorMessage: String?
+
+    var hasData: Bool { response != nil }
 
     func load() async {
         loading = true
@@ -35,20 +38,17 @@ final class LiveDataLoader: ObservableObject {
                 longitude: first.longitude,
                 days: 2
             )
-            async let ambee = PollenAPI.ambeeForecast(
+            async let ambeeTask = PollenAPI.ambeeForecast(
                 latitude: first.latitude,
                 longitude: first.longitude
             )
 
             let response = try await openMeteo
-            let ambeeResp = (try? await ambee) ?? nil
+            let ambeeResp = (try? await ambeeTask) ?? nil
 
-            windows = LiveInterpreter.windows(
-                from: response,
-                ambee: ambeeResp,
-                cityName: first.name
-            )
-            currentSnapshot = LiveInterpreter.currentSnapshot(
+            self.response = response
+            self.ambee = ambeeResp
+            self.currentSnapshot = LiveInterpreter.currentSnapshot(
                 from: response,
                 ambee: ambeeResp
             )

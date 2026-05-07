@@ -8,7 +8,7 @@ struct ContentView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 Header()
-                LiveSection(loader: loader)
+                LiveSection(loader: loader, journal: journal)
                 JournalSection(journal: journal, loader: loader)
                 PollenSection()
                 AirSection()
@@ -173,6 +173,21 @@ private struct LevelsList: View {
 
 private struct LiveSection: View {
     @ObservedObject var loader: LiveDataLoader
+    @ObservedObject var journal: SymptomJournal
+
+    private var personalAllergens: Set<PollenKind> {
+        Set(journal.personalAllergens.map { $0.kind })
+    }
+
+    private var windows: [LiveWindow] {
+        guard let response = loader.response else { return [] }
+        return LiveInterpreter.windows(
+            from: response,
+            ambee: loader.ambee,
+            cityName: loader.resolvedCityName,
+            personalAllergens: personalAllergens
+        )
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -199,20 +214,75 @@ private struct LiveSection: View {
 
             CitySearchBar(loader: loader)
 
+            PersonalizationBanner(
+                personalAllergens: journal.personalAllergens,
+                logsCount: journal.logs.count
+            )
+
             if let error = loader.errorMessage {
                 ErrorBanner(message: error)
-            } else if loader.windows.isEmpty && !loader.loading {
+            } else if windows.isEmpty && !loader.loading {
                 Text("Recherche en cours…")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             } else {
                 VStack(spacing: 10) {
-                    ForEach(loader.windows) { window in
+                    ForEach(windows) { window in
                         WindowCard(window: window)
                     }
                 }
             }
         }
+    }
+}
+
+private struct PersonalizationBanner: View {
+    let personalAllergens: [(kind: PollenKind, percentage: Double)]
+    let logsCount: Int
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: personalAllergens.isEmpty ? "person.crop.circle.badge.questionmark" : "person.crop.circle.badge.checkmark")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(personalAllergens.isEmpty ? Color.secondary : Color.green)
+            VStack(alignment: .leading, spacing: 1) {
+                if personalAllergens.isEmpty {
+                    Text("Prévisions génériques")
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    Text(logsCount == 0
+                         ? "Note tes symptômes pour personnaliser les prévisions selon TES allergènes."
+                         : "Encore quelques notes (\(logsCount)/3 minimum) pour identifier tes allergènes.")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Prévisions personnalisées")
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    HStack(spacing: 4) {
+                        Text("Tes allergènes :")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                        ForEach(personalAllergens.prefix(3), id: \.kind) { p in
+                            HStack(spacing: 3) {
+                                Circle().fill(p.kind.color).frame(width: 5, height: 5)
+                                Text("\(p.kind.label) (\(Int(p.percentage.rounded()))%)")
+                                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.primary.opacity(0.85))
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer()
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(personalAllergens.isEmpty ? Color.primary.opacity(0.04) : Color.green.opacity(0.08))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder((personalAllergens.isEmpty ? Color.primary : Color.green).opacity(0.10), lineWidth: 0.5)
+        )
     }
 }
 
