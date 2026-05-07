@@ -12,6 +12,7 @@
 		1E5D3A503756C4E4E55709B9 /* PollenIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F4CE23ABD356D8E242AEF9 /* PollenIntent.swift */; };
 		225059458EA8C45AE94EC36E /* PollenChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369D98ED026A1702CF4CAADF /* PollenChart.swift */; };
 		2CC5394C9AD0E375C0C36ECB /* PollenWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2C6C089E73BFF583E7FAB1A /* PollenWidgetBundle.swift */; };
+		3BEA9AD309FFF04F5E63F3C6 /* InteractiveChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8380BF12EEFDA8EACD96104B /* InteractiveChartView.swift */; };
 		4372507EC84DCF76C3815662 /* PollenWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19907E626C77B353D09E1A26 /* PollenWidget.swift */; };
 		56522082EFC813ECD824773E /* PollenIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F4CE23ABD356D8E242AEF9 /* PollenIntent.swift */; };
 		688F10BF2CECB806A0548855 /* PollenWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0FEE352F1BB595A93F7AAADA /* PollenWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -68,6 +69,7 @@
 		48523D5528AA43CA75F31E87 /* PollenRisk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenRisk.swift; sourceTree = "<group>"; };
 		697127F9B9F73472A6361FCA /* PollenProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenProvider.swift; sourceTree = "<group>"; };
 		6FE7B6DEE3047923DA737ACF /* PollenWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollenWidgetView.swift; sourceTree = "<group>"; };
+		8380BF12EEFDA8EACD96104B /* InteractiveChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveChartView.swift; sourceTree = "<group>"; };
 		85567AB1FCAE74E6BD6FA918 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8A93AAC4C8B2E305E2563508 /* LiveDataLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveDataLoader.swift; sourceTree = "<group>"; };
 		B71D2BF7E465CA9B08C43715 /* PollenWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PollenWidget.entitlements; sourceTree = "<group>"; };
@@ -79,7 +81,7 @@
 		F978B41C7177D13A62C44773 /* SymptomLoggerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymptomLoggerView.swift; sourceTree = "<group>"; };
 		FD45FD243789449AC45CC33A /* Pollen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pollen.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD61D0F44E9324F045EF2793 /* Pollen.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Pollen.entitlements; sourceTree = "<group>"; };
-		"TEMP_75FFC472-6E8A-4372-82AD-7DD3F68EE38A" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_D3AC9EC5-D3EE-403D-B4A7-A893052E9CEC" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -107,6 +109,7 @@
 				85567AB1FCAE74E6BD6FA918 /* Assets.xcassets */,
 				2F7EAE15C1C9F9FB92253B7A /* ContentView.swift */,
 				146D58B73E9E00DC127318DC /* Info.plist */,
+				8380BF12EEFDA8EACD96104B /* InteractiveChartView.swift */,
 				8A93AAC4C8B2E305E2563508 /* LiveDataLoader.swift */,
 				399A4F3AFF818A52AF106277 /* LiveInterpretation.swift */,
 				FD61D0F44E9324F045EF2793 /* Pollen.entitlements */,
@@ -136,10 +139,10 @@
 			path = PollenWidget;
 			sourceTree = "<group>";
 		};
-		"TEMP_32E41C5E-A1AC-487C-BB86-9E3755B204D8" /* pollen */ = {
+		"TEMP_7DF19903-5F69-4B6C-B326-C110634E9EE7" /* pollen */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_75FFC472-6E8A-4372-82AD-7DD3F68EE38A" /* Secrets.xcconfig */,
+				"TEMP_D3AC9EC5-D3EE-403D-B4A7-A893052E9CEC" /* Secrets.xcconfig */,
 			);
 			path = pollen;
 			sourceTree = "<group>";
@@ -263,6 +266,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				ADF8BC4D9533E58AEC282963 /* ContentView.swift in Sources */,
+				3BEA9AD309FFF04F5E63F3C6 /* InteractiveChartView.swift in Sources */,
 				ABEE6AB9FA6103724458E277 /* LiveDataLoader.swift in Sources */,
 				7726990C6354ED84484B9F1E /* LiveInterpretation.swift in Sources */,
 				96F8F92F483EA5176F1171B5 /* PollenAPI.swift in Sources */,
@@ -288,7 +292,7 @@
 /* Begin XCBuildConfiguration section */
 		11EB7861E941B9E7DFAFBC7D /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_75FFC472-6E8A-4372-82AD-7DD3F68EE38A" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_D3AC9EC5-D3EE-403D-B4A7-A893052E9CEC" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -378,7 +382,7 @@
 		};
 		589212D4D00C62A636F985B5 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_75FFC472-6E8A-4372-82AD-7DD3F68EE38A" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_D3AC9EC5-D3EE-403D-B4A7-A893052E9CEC" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -461,7 +465,7 @@
 		};
 		D0C61F2B70B94C45DF5C8226 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_75FFC472-6E8A-4372-82AD-7DD3F68EE38A" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_D3AC9EC5-D3EE-403D-B4A7-A893052E9CEC" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = PollenWidget/PollenWidget.entitlements;
@@ -484,7 +488,7 @@
 		};
 		E283F3F93A123E893392A64B /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_75FFC472-6E8A-4372-82AD-7DD3F68EE38A" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_D3AC9EC5-D3EE-403D-B4A7-A893052E9CEC" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = PollenWidget/PollenWidget.entitlements;

@@ -9,6 +9,7 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 24) {
                 Header()
                 LiveSection(loader: loader, journal: journal)
+                InteractiveChartView(loader: loader, journal: journal)
                 JournalSection(journal: journal, loader: loader)
                 PollenSection()
                 AirSection()
@@ -17,7 +18,7 @@ struct ContentView: View {
                 Footer()
             }
             .padding(28)
-            .frame(maxWidth: 760)
+            .frame(maxWidth: 820)
             .frame(maxWidth: .infinity)
         }
         .background(BackgroundGradient())
@@ -342,6 +343,15 @@ private struct ErrorBanner: View {
 private struct WindowCard: View {
     let window: LiveWindow
 
+    private var bgIntensity: (top: Double, bottom: Double, border: Double) {
+        switch window.risk {
+        case .low: (0.12, 0.04, 0.20)
+        case .moderate: (0.25, 0.10, 0.40)
+        case .high: (0.32, 0.14, 0.50)
+        case .veryHigh: (0.38, 0.18, 0.60)
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
@@ -358,7 +368,7 @@ private struct WindowCard: View {
 
             Text(window.summary)
                 .font(.system(size: 12, weight: .regular))
-                .foregroundStyle(.primary.opacity(0.88))
+                .foregroundStyle(.primary.opacity(0.92))
                 .fixedSize(horizontal: false, vertical: true)
 
             if !window.highlights.isEmpty {
@@ -369,13 +379,13 @@ private struct WindowCard: View {
                                 .font(.system(size: 9, weight: .medium))
                                 .foregroundStyle(h.color)
                             Text("\(h.label) · \(h.value)")
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                .foregroundStyle(.primary.opacity(0.85))
+                                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.primary.opacity(0.90))
                         }
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
                         .background(
-                            Capsule().fill(h.color.opacity(0.10))
+                            Capsule().fill(h.color.opacity(0.18))
                         )
                     }
                     Spacer()
@@ -385,12 +395,23 @@ private struct WindowCard: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.regularMaterial)
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.regularMaterial)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(LinearGradient(
+                        colors: [
+                            window.risk.color.opacity(bgIntensity.top),
+                            window.risk.color.opacity(bgIntensity.bottom),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+            }
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(window.risk.color.opacity(0.18), lineWidth: 0.5)
+                .strokeBorder(window.risk.color.opacity(bgIntensity.border), lineWidth: 1)
         )
     }
 }
