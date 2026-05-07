@@ -24,6 +24,13 @@ targets:
     platform: macOS
     sources:
       - path: Pollen
+      - path: PollenWidget/PollenAPI.swift
+      - path: PollenWidget/PollenModels.swift
+      - path: PollenWidget/PollenIntent.swift
+      - path: PollenWidget/PollenRisk.swift
+    configFiles:
+      Debug: Secrets.xcconfig
+      Release: Secrets.xcconfig
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.deleev.pollen

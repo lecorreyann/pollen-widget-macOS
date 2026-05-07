@@ -108,21 +108,29 @@ struct PollenChart: View {
         return .dateTime.hour(.defaultDigits(amPM: .omitted)).minute()
     }
 
+    private var yGridValues: [Double] {
+        if kind == .air {
+            var step: Double = 25
+            if maxY > 150 { step = 50 }
+            if maxY > 300 { step = 100 }
+            var values: [Double] = []
+            var v: Double = 0
+            while v <= maxY {
+                values.append(v)
+                v += step
+            }
+            return values
+        }
+        var values: [Double] = [0, 20, 50, 100]
+        if maxY > 150 { values.append(150) }
+        if maxY > 200 { values.append(200) }
+        if maxY > 300 { values.append(300) }
+        if maxY > 400 { values.append(400) }
+        return values.filter { $0 <= maxY }
+    }
+
     var body: some View {
         Chart {
-            // Subtle threshold reference (only for pollen modes — air mode has mixed units)
-            if kind != .air {
-                if maxY > 50 {
-                    RuleMark(y: .value("Seuil", 50))
-                        .foregroundStyle(.secondary.opacity(0.10))
-                        .lineStyle(StrokeStyle(lineWidth: 0.5, dash: [3, 4]))
-                }
-                if maxY > 100 {
-                    RuleMark(y: .value("Seuil", 100))
-                        .foregroundStyle(.secondary.opacity(0.12))
-                        .lineStyle(StrokeStyle(lineWidth: 0.5, dash: [3, 4]))
-                }
-            }
 
             if isMulti {
                 ForEach(multiKinds, id: \.self) { k in
@@ -252,7 +260,19 @@ struct PollenChart: View {
                 }
             }
         }
-        .chartYAxis(.hidden)
+        .chartYAxis {
+            AxisMarks(position: .leading, values: yGridValues) { value in
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                    .foregroundStyle(.secondary.opacity(0.15))
+                AxisValueLabel(anchor: .trailing) {
+                    if let v = value.as(Double.self) {
+                        Text("\(Int(v))")
+                            .font(.system(size: compact ? 8 : 9, weight: .medium, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
         .chartLegend(.hidden)
     }
 }
