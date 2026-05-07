@@ -102,14 +102,11 @@ struct PollenChart: View {
     }
 
     private var peakLabelFormat: Date.FormatStyle {
-        if period == .week {
-            return .dateTime.weekday(.abbreviated).hour(.defaultDigits(amPM: .omitted))
-        }
-        return .dateTime.hour(.defaultDigits(amPM: .omitted)).minute()
+        .dateTime.hour(.defaultDigits(amPM: .omitted)).minute()
     }
 
-    /// Domaine X aligné sur la période (00h-24h pour aujourd'hui/demain),
-    /// pour que la courbe et la grille couvrent toute la journée.
+    /// Domaine X aligné sur la période (00h-24h), pour que la courbe et la
+    /// grille couvrent toute la journée.
     private var xDomain: ClosedRange<Date> {
         let calendar = Calendar.current
         let now = Date()
@@ -122,10 +119,6 @@ struct PollenChart: View {
             let today = calendar.startOfDay(for: now)
             let start = calendar.date(byAdding: .day, value: 1, to: today) ?? today
             let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start.addingTimeInterval(86400)
-            return start...end
-        case .week:
-            let start = calendar.startOfDay(for: now)
-            let end = calendar.date(byAdding: .day, value: 7, to: start) ?? start.addingTimeInterval(7 * 86400)
             return start...end
         }
     }
@@ -189,16 +182,6 @@ struct PollenChart: View {
                     .interpolationMethod(.catmullRom)
                 }
 
-                if period == .week {
-                    ForEach(samples) { sample in
-                        PointMark(
-                            x: .value("Date", sample.date),
-                            y: .value("Pollen", sample.value)
-                        )
-                        .foregroundStyle(PollenRisk.from(sample.value).color)
-                        .symbolSize(35)
-                    }
-                }
             }
 
             // Now indicator + ghost pill (today only, single kind)
@@ -264,21 +247,15 @@ struct PollenChart: View {
         .chartYScale(domain: 0...maxY)
         .chartXScale(domain: xDomain)
         .chartXAxis {
-            let count: Int = period == .week ? 7 : (compact ? 6 : 9)
+            let count: Int = compact ? 6 : 9
             AxisMarks(values: .automatic(desiredCount: count)) { value in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
                     .foregroundStyle(.secondary.opacity(0.10))
                 AxisValueLabel(centered: false) {
                     if let date = value.as(Date.self) {
-                        Group {
-                            if period == .week {
-                                Text(date, format: .dateTime.weekday(.abbreviated))
-                            } else {
-                                Text(date, format: .dateTime.hour(.defaultDigits(amPM: .omitted)))
-                            }
-                        }
-                        .font(.system(size: compact ? 8 : 9, weight: .regular, design: .rounded))
-                        .foregroundStyle(.secondary)
+                        Text(date, format: .dateTime.hour(.defaultDigits(amPM: .omitted)))
+                            .font(.system(size: compact ? 8 : 9, weight: .regular, design: .rounded))
+                            .foregroundStyle(.secondary)
                     }
                 }
             }

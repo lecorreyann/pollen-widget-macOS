@@ -5,7 +5,6 @@ import WidgetKit
 enum PollenPeriod: String, AppEnum {
     case today
     case tomorrow
-    case week
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation {
         TypeDisplayRepresentation(name: "Période")
@@ -15,7 +14,6 @@ enum PollenPeriod: String, AppEnum {
         [
             .today: DisplayRepresentation(title: "Aujourd'hui"),
             .tomorrow: DisplayRepresentation(title: "Demain"),
-            .week: DisplayRepresentation(title: "7 prochains jours"),
         ]
     }
 
@@ -23,7 +21,6 @@ enum PollenPeriod: String, AppEnum {
         switch self {
         case .today: "Aujourd'hui"
         case .tomorrow: "Demain"
-        case .week: "Sur 7 jours"
         }
     }
 
@@ -31,7 +28,6 @@ enum PollenPeriod: String, AppEnum {
         switch self {
         case .today: "Auj."
         case .tomorrow: "Demain"
-        case .week: "7 j."
         }
     }
 }
@@ -368,12 +364,12 @@ enum SelectedPeriodStore {
     private static let key = "selectedPeriod"
 
     static func read(default fallback: PollenPeriod) -> PollenPeriod {
+        // Si la valeur stockée est l'ancienne "week" (retirée), `init?(rawValue:)`
+        // renvoie nil et on retombe sur le fallback (.today).
         guard let raw = UserDefaults.standard.string(forKey: key),
               let value = PollenPeriod(rawValue: raw) else {
             return fallback
         }
-        // Migration : le mode 7 jours a été retiré (données Ambee limitées à 2 j).
-        if value == .week { return .today }
         return value
     }
 

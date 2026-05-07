@@ -31,7 +31,7 @@ enum LiveInterpreter {
     ) -> DataSnapshot {
         var values: [String: Double] = [:]
         for kind in PollenKind.concreteKinds + PollenKind.airKinds {
-            let samples = PollenAPI.samples(for: response, kind: kind, period: .week, referenceDate: now)
+            let samples = PollenAPI.samples(for: response, kind: kind, period: .today, referenceDate: now)
             if let nearest = samples.min(by: {
                 abs($0.date.timeIntervalSince(now)) < abs($1.date.timeIntervalSince(now))
             }) {
@@ -39,7 +39,7 @@ enum LiveInterpreter {
             }
         }
         if let ambee {
-            let ambeeKind = PollenAPI.samplesByKindFromAmbee(ambee, period: .week, referenceDate: now)
+            let ambeeKind = PollenAPI.samplesByKindFromAmbee(ambee, period: .today, referenceDate: now)
             let openMeteoCovered: Set<PollenKind> = [.alder, .birch, .grass, .mugwort, .olive, .ragweed]
             for (kind, samples) in ambeeKind where !samples.isEmpty {
                 if openMeteoCovered.contains(kind) { continue }
@@ -77,13 +77,21 @@ enum LiveInterpreter {
 
         var byKind: [PollenKind: [PollenSample]] = [:]
         for kind in PollenKind.concreteKinds + PollenKind.airKinds {
-            byKind[kind] = PollenAPI.samples(for: response, kind: kind, period: .week, referenceDate: now)
+            byKind[kind] = PollenAPI.todayAndTomorrowSamples(for: response, kind: kind, referenceDate: now)
         }
         if let ambee {
-            let ambeeKind = PollenAPI.samplesByKindFromAmbee(ambee, period: .week, referenceDate: now)
+            // Ambee : combiner today + tomorrow pour les espèces qu'il fournit seul.
             let openMeteoCovered: Set<PollenKind> = [.alder, .birch, .grass, .mugwort, .olive, .ragweed]
-            for (k, list) in ambeeKind where !list.isEmpty {
-                if !openMeteoCovered.contains(k) { byKind[k] = list }
+            let todayKind = PollenAPI.samplesByKindFromAmbee(ambee, period: .today, referenceDate: now)
+            let tomorrowKind = PollenAPI.samplesByKindFromAmbee(ambee, period: .tomorrow, referenceDate: now)
+            for kind in PollenKind.concreteKinds where !openMeteoCovered.contains(kind) {
+                let t = todayKind[kind] ?? []
+                let m = tomorrowKind[kind] ?? []
+                var seen = Set<Date>()
+                let combined = (t + m)
+                    .filter { seen.insert($0.date).inserted }
+                    .sorted { $0.date < $1.date }
+                if !combined.isEmpty { byKind[kind] = combined }
             }
         }
 

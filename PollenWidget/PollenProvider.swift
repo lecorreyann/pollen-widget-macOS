@@ -50,7 +50,6 @@ struct PollenProvider: AppIntentTimelineProvider {
         switch period {
         case .today: days = 2
         case .tomorrow: days = 3
-        case .week: days = 7
         }
 
         do {
@@ -122,7 +121,6 @@ struct PollenProvider: AppIntentTimelineProvider {
             switch period {
             case .today: days = 2
             case .tomorrow: days = 3
-            case .week: days = 7
             }
             async let openMeteoTask = PollenAPI.airQuality(latitude: city.latitude, longitude: city.longitude, days: days)
             async let ambeeTask = PollenAPI.ambeeForecast(latitude: city.latitude, longitude: city.longitude)
@@ -220,7 +218,7 @@ extension PollenEntry {
                 chosen = list.min(by: {
                     abs($0.date.timeIntervalSince(now)) < abs($1.date.timeIntervalSince(now))
                 })
-            case .tomorrow, .week:
+            case .tomorrow:
                 chosen = list.max(by: { $0.value < $1.value })
             }
             guard let sample = chosen else { continue }
@@ -235,7 +233,6 @@ extension PollenEntry {
         switch currentPeriod {
         case .today: prefix = "Maintenant"
         case .tomorrow: prefix = "Demain"
-        case .week: prefix = "Sur 7 jours"
         }
         return Headline(label: "\(prefix) · \(worst.kind.label)", value: worst.value, kind: worst.kind)
     }
@@ -253,10 +250,6 @@ extension PollenEntry {
         case .tomorrow:
             guard let s = samples.max(by: { $0.value < $1.value }) else { return nil }
             let label = kindLabel.map { "Demain · \($0)" } ?? "Demain"
-            return Headline(label: label, value: s.value, kind: nil)
-        case .week:
-            guard let s = samples.max(by: { $0.value < $1.value }) else { return nil }
-            let label = kindLabel.map { "Sur 7 jours · \($0)" } ?? "Sur 7 jours"
             return Headline(label: label, value: s.value, kind: nil)
         }
     }
@@ -277,7 +270,7 @@ extension PollenEntry {
             }
             guard let best else { return nil }
             return Headline(label: "Maintenant · \(best.kind.label)", value: best.value, kind: best.kind)
-        case .tomorrow, .week:
+        case .tomorrow:
             var best: (kind: PollenKind, value: Double)?
             for kind in PollenKind.concreteKinds {
                 guard let list = allKindSamples[kind],
@@ -287,8 +280,7 @@ extension PollenEntry {
                 }
             }
             guard let best else { return nil }
-            let prefix = currentPeriod == .tomorrow ? "Demain" : "Sur 7 jours"
-            return Headline(label: "\(prefix) · \(best.kind.label)", value: best.value, kind: best.kind)
+            return Headline(label: "Demain · \(best.kind.label)", value: best.value, kind: best.kind)
         }
     }
 }

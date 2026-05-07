@@ -54,8 +54,8 @@ struct InteractiveChartView: View {
         return (all.first ?? Date(), all.last ?? Date().addingTimeInterval(3600))
     }
 
-    /// Domaine X complet : du début de la période au début du jour suivant
-    /// (ou +7 jours pour la semaine), pour que le chart couvre 23h-00h sans coupe.
+    /// Domaine X complet : du début de la période au début du jour suivant,
+    /// pour que le chart couvre 23h-00h sans coupe.
     private var xDomain: ClosedRange<Date> {
         let calendar = Calendar.current
         let now = Date()
@@ -68,10 +68,6 @@ struct InteractiveChartView: View {
             let today = calendar.startOfDay(for: now)
             let start = calendar.date(byAdding: .day, value: 1, to: today) ?? today
             let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start.addingTimeInterval(86400)
-            return start...end
-        case .week:
-            let start = calendar.startOfDay(for: now)
-            let end = calendar.date(byAdding: .day, value: 7, to: start) ?? start.addingTimeInterval(7 * 86400)
             return start...end
         }
     }
@@ -147,19 +143,6 @@ struct InteractiveChartView: View {
                 .padding(.horizontal, 4)
             }
 
-            // Disponibilité des données
-            if mode != .air && hasExtendedSpeciesData && period == .week {
-                HStack(spacing: 6) {
-                    Image(systemName: "info.circle")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.tertiary)
-                    Text("Cyprès, Chêne, Pin, Platane, Pariétaire, Noisetier, Frêne, Plantain : prévisions limitées à 2 jours (source Ambee, plan gratuit). Les autres espèces couvrent les 7 jours.")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.tertiary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(.horizontal, 4)
-            }
         }
         .onAppear { recomputeByKind() }
         .onChange(of: period) { _, _ in recomputeByKind() }
@@ -200,20 +183,14 @@ struct InteractiveChartView: View {
         .chartXScale(domain: xDomain)
         .chartXSelection(value: $hoveredDate)
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: period == .week ? 7 : 9)) { value in
+            AxisMarks(values: .automatic(desiredCount: 9)) { value in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
                     .foregroundStyle(.secondary.opacity(0.10))
                 AxisValueLabel {
                     if let date = value.as(Date.self) {
-                        Group {
-                            if period == .week {
-                                Text(date, format: .dateTime.weekday(.abbreviated))
-                            } else {
-                                Text(date, format: .dateTime.hour(.defaultDigits(amPM: .omitted)))
-                            }
-                        }
-                        .font(.system(size: 10, weight: .regular, design: .rounded))
-                        .foregroundStyle(.secondary)
+                        Text(date, format: .dateTime.hour(.defaultDigits(amPM: .omitted)))
+                            .font(.system(size: 10, weight: .regular, design: .rounded))
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
@@ -240,8 +217,7 @@ struct InteractiveChartView: View {
                         TooltipCard(
                             date: hoveredDate,
                             samples: nearestSamples(at: hoveredDate),
-                            personalAllergens: personalAllergens,
-                            period: period
+                            personalAllergens: personalAllergens
                         )
                         .fixedSize()
                         .offset(
@@ -257,7 +233,7 @@ struct InteractiveChartView: View {
     private func nearestSamples(at date: Date) -> [(kind: PollenKind, value: Double)] {
         // Seuil de proximité : si l'échantillon le plus proche est trop loin,
         // on n'affiche pas (sinon on ment, on renvoie la dernière donnée connue).
-        let threshold: TimeInterval = period == .week ? 12 * 3600 : 1.5 * 3600
+        let threshold: TimeInterval = 1.5 * 3600
         var results: [(kind: PollenKind, value: Double)] = []
         for kind in displayedKinds {
             guard let list = byKind[kind], !list.isEmpty else { continue }
@@ -271,10 +247,6 @@ struct InteractiveChartView: View {
         return results.sorted { $0.value > $1.value }
     }
 
-    private var hasExtendedSpeciesData: Bool {
-        let extended: Set<PollenKind> = [.cypress, .plane, .hazel, .plantain, .nettle, .oak, .ash, .pine]
-        return displayedKinds.contains(where: { extended.contains($0) })
-    }
 }
 
 // MARK: - Selectors
@@ -344,16 +316,11 @@ private struct TooltipCard: View {
     let date: Date
     let samples: [(kind: PollenKind, value: Double)]
     let personalAllergens: Set<PollenKind>
-    let period: PollenPeriod
 
     private var dateString: String {
         let f = DateFormatter()
         f.locale = Locale(identifier: "fr_FR")
-        if period == .week {
-            f.dateFormat = "EEEE d MMM, HH'h'"
-        } else {
-            f.dateFormat = "EEEE HH:mm"
-        }
+        f.dateFormat = "EEEE HH:mm"
         return f.string(from: date)
     }
 

@@ -144,6 +144,21 @@ struct PollenAPI {
         return try JSONDecoder().decode(AirQualityResponse.self, from: data)
     }
 
+    /// Échantillons sur aujourd'hui ET demain combinés (sans doublons sur la frontière).
+    /// Utile pour les fenêtres temporelles qui chevauchent les deux jours.
+    static func todayAndTomorrowSamples(
+        for response: AirQualityResponse,
+        kind: PollenKind,
+        referenceDate: Date = Date()
+    ) -> [PollenSample] {
+        let t1 = samples(for: response, kind: kind, period: .today, referenceDate: referenceDate)
+        let t2 = samples(for: response, kind: kind, period: .tomorrow, referenceDate: referenceDate)
+        var seen = Set<Date>()
+        return (t1 + t2)
+            .filter { seen.insert($0.date).inserted }
+            .sorted { $0.date < $1.date }
+    }
+
     static func samplesByKind(for response: AirQualityResponse, period: PollenPeriod, referenceDate: Date = Date()) -> [PollenKind: [PollenSample]] {
         var result: [PollenKind: [PollenSample]] = [:]
         for kind in PollenKind.concreteKinds {
@@ -237,14 +252,6 @@ struct PollenAPI {
                 return mainDay + [boundary]
             }
             return mainDay
-        case .week:
-            let startOfToday = calendar.startOfDay(for: now)
-            let weekRange = raw.filter { $0.date >= startOfToday }
-            let grouped = Dictionary(grouping: weekRange) { calendar.startOfDay(for: $0.date) }
-            return grouped.map { (day, items) in
-                PollenSample(date: day, value: items.map(\.value).max() ?? 0)
-            }
-            .sorted { $0.date < $1.date }
         }
     }
 }
